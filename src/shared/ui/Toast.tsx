@@ -180,7 +180,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       {mounted
         ? createPortal(
-            <div className="pointer-events-none fixed right-3 top-20 z-[100010] flex flex-col gap-2 sm:right-4 sm:top-24">
+            <div className="pointer-events-none fixed right-3 top-[max(0.75rem,env(safe-area-inset-top))] z-[100010] flex flex-col gap-2 sm:right-4">
               {items.map((item) => (
                 <ToastCard key={item.id} item={item} onClose={onClose} />
               ))}

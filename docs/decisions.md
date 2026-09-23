@@ -111,3 +111,9 @@ Append-only journal of decisions and user feedback. Format: `YYYY-MM-DD - decisi
 - **Shipped**: home section `#agents` (nav Agents), static OpenAPI 3 at `public/openapi.yaml` documenting exactly `POST /api/preflight` and `POST /api/intent`, curl + OpenAI/Anthropic tool snippets, VerdictCard "Copy as API call" points at OpenAPI / `#agents`.
 - **MCP**: thin stdio server `mcp/server.ts` (`npm run mcp`) with tools `capitalrail_preflight` and `capitalrail_intent` that HTTP-call the Next API via `CAPITALRAIL_BASE_URL` (default production). Does not weaken rate limits or Origin checks.
 - **Honesty**: no API auth today; rate limited; browser cross-site Origin blocked. Documented in OpenAPI info + For agents section.
+
+## 2026-09-23 (branded 404 + toast corner)
+
+- **404**: root `src/app/not-found.tsx` (navy / emerald-cyan, CapitalRailMark, Geist via layout). Links home, `/vaults`, `/#agents`. No `global-not-found` (experimental; single root layout). `data-cr-skip-intro` + CSS `:has()` skip Three.js OpeningIntro on 404.
+- **Toasts**: stack flush viewport top-right (`top` + safe-area only, high z-index above header); no longer offset under SiteHeader (`top-20` / `sm:top-24` removed).
+- **Deploy**: production Dokploy app `l7HAVs_hx4Rzi4YGdPLQg` (`capitalrail.ozc.fr`) after push to `master`.

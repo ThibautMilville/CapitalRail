@@ -997,6 +997,24 @@ html:not(.cr-intro-done) .cr-app-shell:not(.is-revealed) {
   pointer-events: none;
 }
 
+/* 404 / light pages: skip Three.js intro without waiting for client effects */
+html:has([data-cr-skip-intro]) .cr-intro-overlay {
+  display: none !important;
+}
+
+html:has([data-cr-skip-intro]) .cr-app-shell,
+html:has([data-cr-skip-intro]) .cr-app-shell:not(.is-revealed) {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+html:has([data-cr-skip-intro]):not(.cr-intro-done),
+html:has([data-cr-skip-intro]).cr-intro-scroll-lock {
+  overflow: auto;
+  overscroll-behavior: auto;
+  scrollbar-width: thin;
+}
+
 .cr-app-shell {
   min-height: 100dvh;
   display: flex;

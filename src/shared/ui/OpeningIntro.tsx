@@ -111,6 +111,11 @@ export function OpeningIntro({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (phase !== "playing") return;
+    // 404 (and other light pages) set data-cr-skip-intro - skip Three.js intro.
+    if (document.querySelector("[data-cr-skip-intro]")) {
+      complete();
+      return;
+    }
     const canvas = canvasRef.current;
     if (!canvas) return;
 
