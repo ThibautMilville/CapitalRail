@@ -6,6 +6,7 @@ import { waitForTransactionReceipt } from "wagmi/actions";
 import type { PreflightResponse } from "@/features/preflight/lib/types";
 import { formatUsdc } from "@/features/preflight/lib/verdict";
 import type { TxStep } from "@/shared/ixs/types";
+import { IconDeposit, IconShieldCheck, IconWallet } from "@/shared/ui/icons";
 import { useToast } from "@/shared/ui/Toast";
 import { chainLabel, explorerName, explorerTxUrl } from "@/shared/wallet/chains";
 
@@ -23,7 +24,7 @@ type StepState = "idle" | "wallet" | "confirming" | "done";
 type Position = { shares: string; shareValueInAssets: string };
 
 const btnPrimary =
-  "min-h-11 cursor-pointer rounded-xl border border-emerald-200/40 bg-emerald-300/[0.16] px-4 py-2 text-[0.88rem] font-semibold text-emerald-50 transition-[filter,opacity] touch-manipulation hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45";
+  "inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-emerald-200/40 bg-emerald-300/[0.16] px-4 py-2 text-[0.88rem] font-semibold text-emerald-50 transition-[filter,opacity] touch-manipulation hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45";
 
 function stepCopy(step: TxStep, amount: string, chain: string) {
   if (step.type.includes("approve")) {
@@ -31,6 +32,7 @@ function stepCopy(step: TxStep, amount: string, chain: string) {
       title: "Allow the vault to use your USDC",
       body: `Approves exactly ${amount} USDC for this vault. No funds move yet.`,
       action: `Approve ${amount} USDC`,
+      kind: "approve" as const,
     };
   }
   if (step.type.includes("deposit")) {
@@ -38,9 +40,15 @@ function stepCopy(step: TxStep, amount: string, chain: string) {
       title: `Deposit into the ${chain} vault`,
       body: `Sends ${amount} USDC and returns vault shares to your wallet.`,
       action: `Deposit ${amount} USDC`,
+      kind: "deposit" as const,
     };
   }
-  return { title: step.type, body: step.description ?? "", action: "Sign" };
+  return {
+    title: step.type,
+    body: step.description ?? "",
+    action: "Sign",
+    kind: "sign" as const,
+  };
 }
 
 function short(address: string) {
@@ -104,6 +112,7 @@ export function SignPanel({
           onClick={onConnect}
           disabled={connecting}
         >
+          <IconWallet className="h-4 w-4 shrink-0" />
           {connecting ? "Opening wallet..." : "Connect wallet to prepare your deposit"}
         </button>
       </>,
@@ -270,6 +279,13 @@ export function SignPanel({
                       disabled={!unlocked || busy}
                       onClick={() => void sign(index)}
                     >
+                      {copyText.kind === "approve" ? (
+                        <IconShieldCheck className="h-4 w-4 shrink-0" />
+                      ) : copyText.kind === "deposit" ? (
+                        <IconDeposit className="h-4 w-4 shrink-0" />
+                      ) : (
+                        <IconWallet className="h-4 w-4 shrink-0" />
+                      )}
                       {state === "wallet"
                         ? "Confirm in your wallet..."
                         : state === "confirming"

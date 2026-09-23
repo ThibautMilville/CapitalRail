@@ -7,6 +7,7 @@ import {
   buildVerdict,
   type VerdictAction,
 } from "@/features/preflight/lib/verdict";
+import { IconCopy, IconRefresh, IconSpark } from "@/shared/ui/icons";
 import { useToast } from "@/shared/ui/Toast";
 
 type VerdictCardProps = {
@@ -42,11 +43,11 @@ const TONE = {
 } as const;
 
 const btnPrimary =
-  "min-h-11 cursor-pointer rounded-xl border border-emerald-200/40 bg-emerald-300/[0.16] px-4 py-2 text-[0.86rem] font-semibold text-emerald-50 transition-[filter,opacity] touch-manipulation hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-emerald-200/40 bg-emerald-300/[0.16] px-4 py-2 text-[0.86rem] font-semibold text-emerald-50 transition-[filter,opacity] touch-manipulation hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50";
 const btnSecondary =
-  "min-h-11 cursor-pointer rounded-xl border border-emerald-200/15 bg-white/[0.03] px-4 py-2 text-[0.84rem] text-slate-200 transition-[border-color] touch-manipulation hover:border-emerald-200/35 disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-emerald-200/15 bg-white/[0.03] px-4 py-2 text-[0.84rem] text-slate-200 transition-[border-color] touch-manipulation hover:border-emerald-200/35 disabled:cursor-not-allowed disabled:opacity-50";
 const linkBtn =
-  "min-h-9 cursor-pointer rounded-lg px-1 text-[0.8rem] font-medium text-cyan-200/80 underline-offset-2 touch-manipulation hover:text-cyan-100 hover:underline";
+  "inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-lg px-1 text-[0.8rem] font-medium text-cyan-200/80 underline-offset-2 touch-manipulation hover:text-cyan-100 hover:underline";
 
 const SEVERITY_DOT = {
   info: "bg-cyan-200/70",
@@ -168,6 +169,7 @@ export function VerdictCard({
           {view.actions.map((action) => {
             const primary = "primary" in action && action.primary;
             const spotlight = spotlightActionId === action.id;
+            const showIcon = primary || action.kind === "recheck";
             return (
               <button
                 key={action.id}
@@ -176,9 +178,16 @@ export function VerdictCard({
                 onClick={() => onAction(action)}
                 className={`${primary ? btnPrimary : btnSecondary} ${spotlight ? "cr-spotlight" : ""}`}
               >
+                {showIcon ? (
+                  action.kind === "recheck" ? (
+                    <IconRefresh className="h-3.5 w-3.5 shrink-0" />
+                  ) : (
+                    <IconSpark className="h-3.5 w-3.5 shrink-0" />
+                  )
+                ) : null}
                 {action.label}
                 {action.kind === "notify" ? (
-                  <span className="ml-1.5 rounded border border-amber-200/35 px-1 font-mono text-[0.6rem] uppercase text-amber-200/90">
+                  <span className="ml-0.5 rounded border border-amber-200/35 px-1 font-mono text-[0.6rem] uppercase text-amber-200/90">
                     Soon
                   </span>
                 ) : null}
@@ -201,6 +210,7 @@ export function VerdictCard({
           onClick={copyApiCall}
           title="Copy a ready curl for POST /api/preflight with these rules"
         >
+          <IconCopy className="h-3.5 w-3.5 shrink-0" />
           Copy as API call
         </button>
       </div>

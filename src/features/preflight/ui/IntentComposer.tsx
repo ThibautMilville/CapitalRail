@@ -8,6 +8,7 @@ import {
 } from "@/features/preflight/lib/mandate";
 import { requestIntent } from "@/features/preflight/lib/request-intent";
 import { RulesEditor } from "@/features/preflight/ui/RulesEditor";
+import { IconSearch } from "@/shared/ui/icons";
 import { useToast } from "@/shared/ui/Toast";
 
 type IntentComposerProps = {
@@ -28,7 +29,7 @@ const EXAMPLES = [
 ];
 
 const btnPrimary =
-  "min-h-12 cursor-pointer rounded-xl border border-emerald-200/40 bg-emerald-300/[0.16] px-5 py-2.5 text-[0.92rem] font-semibold text-emerald-50 shadow-[0_0_24px_rgba(91,238,190,0.12)] transition-[filter,opacity] touch-manipulation hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border border-emerald-200/40 bg-emerald-300/[0.16] px-5 py-2.5 text-[0.92rem] font-semibold text-emerald-50 shadow-[0_0_24px_rgba(91,238,190,0.12)] transition-[filter,opacity] touch-manipulation hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50";
 
 export function IntentComposer({
   mandate,
@@ -99,6 +100,7 @@ export function IntentComposer({
           aria-label="What do you want to deposit?"
         />
         <button type="submit" className={btnPrimary} disabled={busy}>
+          <IconSearch className="h-4 w-4 shrink-0" />
           {parsing ? "Reading..." : loading ? "Checking..." : "Check my entry"}
         </button>
       </form>

@@ -16,6 +16,7 @@ import type {
   MandatePatch,
 } from "@/features/agent/lib/agent-schema";
 import { CapitalRailMark } from "@/shared/ui/CapitalRailMark";
+import { IconRefresh, IconSend } from "@/shared/ui/icons";
 import { useToast } from "@/shared/ui/Toast";
 
 type AgentMessage =
@@ -534,8 +535,11 @@ export function AgentWidget({
                         msg.response!.suggestedAction!.mandatePatch,
                       )
                     }
-                    className="mt-2 min-h-9 w-full cursor-pointer rounded-lg border border-emerald-200/30 bg-emerald-200/[0.1] px-3 py-1.5 text-left text-[0.76rem] text-emerald-100 transition-[filter,opacity] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="mt-2 inline-flex min-h-9 w-full cursor-pointer items-center gap-2 rounded-lg border border-emerald-200/30 bg-emerald-200/[0.1] px-3 py-1.5 text-left text-[0.76rem] text-emerald-100 transition-[filter,opacity] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
                   >
+                    {!msg.applied ? (
+                      <IconRefresh className="h-3.5 w-3.5 shrink-0" />
+                    ) : null}
                     {msg.applied
                       ? "Applied - checking again"
                       : `Apply and re-check: ${describePatch(msg.response.suggestedAction.mandatePatch)}`}
@@ -593,8 +597,9 @@ export function AgentWidget({
             <button
               type="submit"
               disabled={pending || !input.trim()}
-              className="min-h-10 cursor-pointer rounded-xl border border-emerald-200/30 bg-emerald-200/[0.12] px-3.5 text-[0.8rem] font-medium text-emerald-100 transition-[filter,opacity] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-emerald-200/30 bg-emerald-200/[0.12] px-3.5 text-[0.8rem] font-medium text-emerald-100 transition-[filter,opacity] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
             >
+              <IconSend className="h-3.5 w-3.5 shrink-0" />
               {context ? "Ask" : "Send"}
             </button>
           </form>

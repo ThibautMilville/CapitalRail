@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CapitalRailMark } from "@/shared/ui/CapitalRailMark";
+import { IconWallet } from "@/shared/ui/icons";
 
 export type SiteHeaderLink = {
   href: string;
@@ -147,7 +148,9 @@ export function SiteHeader({
                   aria-hidden
                   className={`h-1.5 w-1.5 rounded-full ${wallet.wrongNetwork ? "bg-amber-300" : "bg-emerald-300"}`}
                 />
-              ) : null}
+              ) : (
+                <IconWallet className="h-3.5 w-3.5 shrink-0" />
+              )}
               {wallet.connecting
                 ? "Connecting..."
                 : wallet.wrongNetwork
