@@ -2,6 +2,7 @@ import { z } from "zod";
 import { toBaseUnits } from "@/shared/ixs/rest";
 import { vaultBuildRequestDeposit } from "@/shared/ixs/mcp";
 import type { DepositBuildResult, RailSnapshot } from "@/shared/ixs/types";
+import { amountSchema } from "@/shared/validation/amount";
 import { isDemoWallet } from "@/shared/wallet/demo-wallet";
 import { computeSnapshotAttestation } from "./attest-snapshot";
 import { decidePreflight } from "./decide-preflight";
@@ -38,7 +39,7 @@ export const preflightBodySchema = z.object({
   walletAddress: z
     .string()
     .regex(/^0x[a-fA-F0-9]{40}$/, "Invalid wallet address"),
-  amount: z.string().regex(/^\d+(\.\d+)?$/, "Invalid amount"),
+  amount: amountSchema,
   preferences: z.object({
     allowKyc: z.boolean(),
     requireSyncSettlement: z.boolean(),

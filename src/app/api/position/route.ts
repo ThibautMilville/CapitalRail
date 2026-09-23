@@ -30,10 +30,7 @@ export async function GET(request: Request) {
       shareValueInAssets: position.balances.shareValueInAssets.display,
       assetBalance: position.balances.asset.display,
     });
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "position failed" },
-      { status: 502 },
-    );
+  } catch {
+    return NextResponse.json({ error: "position failed" }, { status: 502 });
   }
 }

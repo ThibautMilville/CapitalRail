@@ -5,9 +5,37 @@ import type {
 } from "./types";
 
 const USER_AGENT = "CapitalRail/0.1";
+const DEFAULT_MCP = "https://api-v2.ixs.finance/mcp";
+
+function assertPublicHttpsUrl(raw: string, label: string): string {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    throw new Error(`${label} is not a valid URL`);
+  }
+  if (url.protocol !== "https:") {
+    throw new Error(`${label} must use https`);
+  }
+  const host = url.hostname.toLowerCase();
+  if (
+    host === "localhost" ||
+    host.endsWith(".local") ||
+    host === "0.0.0.0" ||
+    host.startsWith("127.") ||
+    host.startsWith("10.") ||
+    host.startsWith("192.168.") ||
+    /^172\.(1[6-9]|2\d|3[0-1])\./.test(host) ||
+    host === "[::1]"
+  ) {
+    throw new Error(`${label} points to a private host`);
+  }
+  return raw.replace(/\/$/, "");
+}
 
 function mcpUrl() {
-  return process.env.IXS_MCP_URL ?? "https://api-v2.ixs.finance/mcp";
+  const raw = process.env.IXS_MCP_URL?.trim() || DEFAULT_MCP;
+  return assertPublicHttpsUrl(raw, "IXS_MCP_URL");
 }
 
 function parseSseJsonRpc(raw: string): unknown {

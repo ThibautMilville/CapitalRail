@@ -9,12 +9,19 @@ export type RateLimitRule = {
   windowMs: number;
 };
 
-/** Per-route limits per client IP. In-memory: resets on restart, per server instance. */
+/**
+ * Per-route limits per client IP. In-memory: resets on restart, per server instance.
+ * SERV-costly routes are tight: once SERV_API_KEY is set, each call burns credits.
+ */
 export const RATE_LIMITS = {
-  preflight: { name: "preflight", limit: 12, windowMs: 60_000 },
-  intent: { name: "intent", limit: 20, windowMs: 60_000 },
-  agent: { name: "agent", limit: 20, windowMs: 60_000 },
-  position: { name: "position", limit: 30, windowMs: 60_000 },
+  preflight: { name: "preflight", limit: 6, windowMs: 60_000 },
+  intent: { name: "intent", limit: 10, windowMs: 60_000 },
+  agent: { name: "agent", limit: 10, windowMs: 60_000 },
+  position: { name: "position", limit: 20, windowMs: 60_000 },
+  health: { name: "health", limit: 30, windowMs: 60_000 },
+  stats: { name: "stats", limit: 30, windowMs: 60_000 },
+  /** Shared budget across preflight + intent + agent (SERV / IXS scan). */
+  expensive: { name: "expensive", limit: 12, windowMs: 60_000 },
 } satisfies Record<string, RateLimitRule>;
 
 const MAX_BUCKETS = 10_000;
@@ -68,6 +75,20 @@ export function checkRateLimit(
   return { ok: true, remaining: rule.limit - bucket.count };
 }
 
+function limitedResponse(retryAfterSec: number): NextResponse {
+  return NextResponse.json(
+    {
+      error: `Too many requests - please wait ${retryAfterSec} s and try again.`,
+      code: "RATE_LIMITED",
+      retryAfterSec,
+    },
+    {
+      status: 429,
+      headers: { "Retry-After": String(retryAfterSec) },
+    },
+  );
+}
+
 /** Returns a 429 response when the caller is over the limit, otherwise null. */
 export function rateLimitResponse(
   request: Request,
@@ -75,15 +96,21 @@ export function rateLimitResponse(
 ): NextResponse | null {
   const result = checkRateLimit(rule, clientIp(request));
   if (result.ok) return null;
-  return NextResponse.json(
-    {
-      error: `Too many requests - please wait ${result.retryAfterSec} s and try again.`,
-      code: "RATE_LIMITED",
-      retryAfterSec: result.retryAfterSec,
-    },
-    {
-      status: 429,
-      headers: { "Retry-After": String(result.retryAfterSec) },
-    },
-  );
+  return limitedResponse(result.retryAfterSec);
+}
+
+/**
+ * Applies a route rule plus the shared expensive budget (SERV / heavy IXS).
+ * Counts against both buckets only when all checks pass.
+ */
+export function expensiveRateLimitResponse(
+  request: Request,
+  rule: RateLimitRule,
+): NextResponse | null {
+  const ip = clientIp(request);
+  const route = checkRateLimit(rule, ip);
+  if (!route.ok) return limitedResponse(route.retryAfterSec);
+  const shared = checkRateLimit(RATE_LIMITS.expensive, ip);
+  if (!shared.ok) return limitedResponse(shared.retryAfterSec);
+  return null;
 }

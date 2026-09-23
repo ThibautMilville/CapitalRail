@@ -1,4 +1,5 @@
 import { runTracedStep } from "@/shared/serv/client";
+import { amountSchema } from "@/shared/validation/amount";
 import {
   INTENT_JSON_SCHEMA,
   INTENT_SYSTEM_PROMPT,
@@ -16,13 +17,18 @@ const EMPTY_INTENT: IntentOutput = {
   confidence: "low",
 };
 
+function clampAmount(raw: string): string {
+  const parsed = amountSchema.safeParse(raw);
+  return parsed.success ? parsed.data : "1";
+}
+
 function fallbackParseIntent(message: string): IntentOutput {
   const lower = message.toLowerCase();
 
   const amountMatch = message.match(
-    /(\d+(?:\.\d+)?)\s*(?:usdc|usd|\$)?/i,
+    /(\d{1,12}(?:\.\d{1,8})?)\s*(?:usdc|usd|\$)?/i,
   );
-  const amount = amountMatch?.[1] ?? "1";
+  const amount = clampAmount(amountMatch?.[1] ?? "1");
 
   const allowKyc =
     /\b(kyc|whitelist|onboard)\b/i.test(lower) &&

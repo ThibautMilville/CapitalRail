@@ -2,9 +2,37 @@ import type { IxsVaultListItem, IxsVaultsResponse, PositionResult } from "./type
 
 const USER_AGENT = "CapitalRail/0.1";
 const REST_TIMEOUT_MS = 10_000;
+const DEFAULT_BASE = "https://api-v2.ixs.finance";
+
+function assertPublicHttpsUrl(raw: string, label: string): string {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    throw new Error(`${label} is not a valid URL`);
+  }
+  if (url.protocol !== "https:") {
+    throw new Error(`${label} must use https`);
+  }
+  const host = url.hostname.toLowerCase();
+  if (
+    host === "localhost" ||
+    host.endsWith(".local") ||
+    host === "0.0.0.0" ||
+    host.startsWith("127.") ||
+    host.startsWith("10.") ||
+    host.startsWith("192.168.") ||
+    /^172\.(1[6-9]|2\d|3[0-1])\./.test(host) ||
+    host === "[::1]"
+  ) {
+    throw new Error(`${label} points to a private host`);
+  }
+  return url.origin + (url.pathname === "/" ? "" : url.pathname.replace(/\/$/, ""));
+}
 
 function baseUrl() {
-  return process.env.IXS_API_BASE_URL ?? "https://api-v2.ixs.finance";
+  const raw = process.env.IXS_API_BASE_URL?.trim() || DEFAULT_BASE;
+  return assertPublicHttpsUrl(raw, "IXS_API_BASE_URL");
 }
 
 async function ixsFetch<T>(path: string): Promise<T> {
