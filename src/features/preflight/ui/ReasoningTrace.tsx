@@ -87,22 +87,23 @@ function stepCost(step: ReasoningStepTrace) {
 }
 
 function stepTone(step: ReasoningStepTrace) {
+  // Opaque --bg-2 so the timeline line never shows through the badge.
   if (!step.ok) {
     return {
-      dot: "border-rose-300/70 bg-rose-400/20 text-rose-200",
+      dot: "z-10 border-rose-300/70 bg-[var(--bg-2)] text-rose-200",
       status: "text-rose-300",
       label: step.fallbackReason && step.source === "fallback" ? "degraded" : "fail",
     };
   }
   if (step.source === "fallback") {
     return {
-      dot: "border-amber-200/60 bg-amber-200/10 text-amber-100",
+      dot: "z-10 border-amber-200/60 bg-[var(--bg-2)] text-amber-100",
       status: "text-amber-100/90",
       label: "ok",
     };
   }
   return {
-    dot: "border-emerald-300/70 bg-emerald-300/15 text-emerald-200",
+    dot: "z-10 border-emerald-300/70 bg-[var(--bg-2)] text-emerald-200",
     status: "text-emerald-300",
     label: "ok",
   };
@@ -161,7 +162,7 @@ export function ReasoningTrace({ steps, guard, disagreements }: ReasoningTracePr
         </div>
       </div>
 
-      <ol className="relative m-0 list-none space-y-3 p-0 before:absolute before:bottom-3 before:left-[0.95rem] before:top-3 before:w-px before:bg-gradient-to-b before:from-cyan-200/35 before:to-emerald-200/10">
+      <ol className="relative m-0 list-none space-y-3 p-0 before:absolute before:bottom-3 before:left-[0.95rem] before:top-3 before:z-0 before:w-px before:bg-gradient-to-b before:from-cyan-200/35 before:to-emerald-200/10">
         {steps.map((step, index) => {
           const tone = stepTone(step);
           return (
@@ -224,10 +225,10 @@ export function ReasoningTrace({ steps, guard, disagreements }: ReasoningTracePr
         })}
         <li className="relative pl-10">
           <span
-            className={`absolute left-0 top-2.5 grid h-[1.9rem] w-[1.9rem] place-items-center rounded-full border font-mono text-[0.6rem] font-semibold ${
+            className={`absolute left-0 top-2.5 z-10 grid h-[1.9rem] w-[1.9rem] place-items-center rounded-full border bg-[var(--bg-2)] font-mono text-[0.6rem] font-semibold ${
               guard.applied
-                ? "border-rose-300/70 bg-rose-400/20 text-rose-200"
-                : "border-cyan-200/50 bg-cyan-200/10 text-cyan-100"
+                ? "border-rose-300/70 text-rose-200"
+                : "border-cyan-200/50 text-cyan-100"
             }`}
             aria-hidden
           >
