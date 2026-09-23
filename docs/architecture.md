@@ -87,12 +87,11 @@ USDC decimals: 18 on BSC, 6 on Avalanche.
 
 ```bash
 npm run build
-fuser -k 3003/tcp; nohup npm run start -- -p 3003 > /tmp/capitalrail.log 2>&1 &
+fuser -k 3456/tcp; nohup npm run start -- -p 3456 > /tmp/capitalrail.log 2>&1 &
 ```
 
-- Local URL: http://localhost:3003 (since 2026-09-23; previously 3456, no longer used).
-- Port 3002 belongs to another project (ozc-signaletique): never kill it.
-- If `EADDRINUSE`: `fuser -k 3003/tcp`.
+- Local URL: http://localhost:3456 (dedicated CapitalRail port; 3003 was a temporary fallback).
+- If `EADDRINUSE`: `fuser -k 3456/tcp`.
 - Restart the server after each build, otherwise CSS assets return 500.
 
 ## Rate limits and stats (2026-09-23)
