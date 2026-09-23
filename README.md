@@ -7,14 +7,20 @@ Before any capital moves, CapitalRail checks the live IXS vaults (capacity, whit
 | | |
 | --- | --- |
 | Repo | https://github.com/ThibautMilville/CapitalRail |
-| Live URL | TODO: add the deployed URL |
-| Demo video | TODO: add the video link |
-| Real deposit tx (1 USDC, BSC) | TODO: add the BscScan link of a real deposit made through CapitalRail |
 | License | MIT |
 
 ## Why this product
 
 IXS exposes one High Yield Bond product across four vaults (BSC / Avalanche, KYC vs open). The open Avalanche vault is listed as open but reports a deposit limit of `0`: a naive agent that reads "open" and deposits gets a failed or stuck transaction. CapitalRail treats that as the product: **preflight before deposit**.
+
+## How it works
+
+A four-step guided flow:
+
+1. **Tell us** - amount, chain, KYC preference, and withdrawal mode (or free-text intent).
+2. **We check** - live scan of IXS rails (REST + MCP), then rules and SERV judgment.
+3. **Decision** - GO / WAIT / NO-GO with rejected vaults, risk notes, ranking, and an investment memo.
+4. **Review & sign** - on GO only: unsigned approve + deposit calldata for the connected wallet.
 
 ## SERV usage: rules = code, judgment = SERV
 
@@ -34,7 +40,20 @@ CapitalRail does not ask a model to re-apply rules that code can check exactly. 
 - **Grounding**: every SERV step gets a strict JSON schema (`response_format: json_schema`, `strict: true`), is validated with zod, and passes semantic checks (every vault id exists, the selection is eligible, and every number in a risk note must appear in the payload). Numbers the model needs (for example the share of the vault your deposit would represent) are computed by code and passed as `derived` facts.
 - **Model routing**: `SERV_MODEL_SMALL` (default `gpt-5.4-mini`) and `SERV_MODEL_LARGE` (default `gpt-5.4`), see `.env.example` and `src/shared/serv/config.ts`.
 - **Trace**: per step the source (code / SERV / fallback), tier, model, latency, prompt / completion tokens and an **estimated cost** (OpenAI list prices checked 2026-09-23, labeled as an estimate; SERV billing may differ; override with `SERV_PRICES_JSON`). In fallback the trace shows a projected cost "if live", from payload size.
-- **Fallback**: without `SERV_API_KEY`, or when a call fails or does not validate, each SERV step runs a deterministic fallback with the same output shape and the reason is recorded. The app is fully usable in fallback; the badge lives in "Details for experts", the verdict card only shows a subtle "Powered by SERV Reasoning" pill.
+- **Fallback**: without `SERV_API_KEY`, or when a call fails or does not validate, each SERV step runs a deterministic fallback with the same output shape and the reason is recorded. The app stays fully usable in fallback.
+
+## Key features
+
+- Live IXS vault scan (capacity, KYC / whitelist, settlement mode, balance)
+- Authoritative code rules + SERV risk notes, ranking, memo, and verifier
+- Unsigned tx pack only on GO for the checked connected wallet
+- Decision agent for general questions or follow-ups on the last preflight
+- Rate-limited API for agents and wallets
+- Honest instance counter of avoided failed deposits (WAIT + NO-GO)
+
+## Tech stack
+
+Next.js (App Router), React, TypeScript, Tailwind CSS, wagmi / viem, zod, Three.js (intro), OpenAI-compatible SERV client, IXS REST + MCP.
 
 ## Business model
 
@@ -49,12 +68,14 @@ No invented metrics: the page shows a real counter "Failed deposits avoided on t
 
 All endpoints are rate limited per IP (in-memory): 429 with `{ "error", "code": "RATE_LIMITED", "retryAfterSec" }` and a `Retry-After` header.
 
+Replace `$BASE_URL` with your deployed host (for example `https://your-host.example`).
+
 ```bash
 # Health: IXS reachability, SERV key presence, routed models, instance stats
-curl -s http://localhost:3003/api/health
+curl -s "$BASE_URL/api/health"
 
 # Preflight: GO / WAIT / NO-GO, rejected vaults, risk notes, disagreements, trace
-curl -s -X POST http://localhost:3003/api/preflight \
+curl -s -X POST "$BASE_URL/api/preflight" \
   -H 'Content-Type: application/json' \
   -d '{
     "walletAddress": "0x0000000000000000000000000000000000000001",
@@ -63,35 +84,31 @@ curl -s -X POST http://localhost:3003/api/preflight \
   }'
 
 # Intent: free text (max 500 chars) to a mandate
-curl -s -X POST http://localhost:3003/api/intent \
+curl -s -X POST "$BASE_URL/api/intent" \
   -H 'Content-Type: application/json' \
   -d '{ "message": "500 USDC on BSC, no KYC, delayed withdrawals ok" }'
 
 # Agent: general question (context null) or follow-up on the last preflight
-curl -s -X POST http://localhost:3003/api/agent \
+curl -s -X POST "$BASE_URL/api/agent" \
   -H 'Content-Type: application/json' \
   -d '{ "question": "How does KYC work?", "context": null }'
 
 # Instance stats
-curl -s http://localhost:3003/api/stats
+curl -s "$BASE_URL/api/stats"
 ```
 
 The placeholder wallet `0x...0001` gets a public-data preview (`preview: true`, no tx pack, no balance read). The UI has a **Copy as API call** button under each verdict that copies the matching curl.
 
-## Setup
+## Getting started
 
 ```bash
+git clone https://github.com/ThibautMilville/CapitalRail.git
+cd CapitalRail
 cp .env.example .env.local
 # optional: set SERV_API_KEY from https://console.openserv.ai
 npm install
-npm run dev -- -p 3003
-```
-
-Open http://localhost:3003. Production-like run:
-
-```bash
 npm run build
-fuser -k 3003/tcp; nohup npm run start -- -p 3003 > /tmp/capitalrail.log 2>&1 &
+npm run start
 ```
 
 Checks: `npx tsc --noEmit`, `npm run lint`, `npm test` (node:test via tsx).
@@ -101,7 +118,7 @@ Checks: `npx tsc --noEmit`, `npm run lint`, `npm test` (node:test via tsx).
 ```
 src/
   app/api/          agent, health, intent, position, preflight, stats
-  features/agent/   decision agent (lib + bottom-right widget)
+  features/agent/   decision agent (lib + widget)
   features/preflight/
     lib/            scan-rails, decide-preflight (+ tests), run-preflight, verdict, api-snippet
     ui/             guided flow, verdict card, reasoning trace, business model section
@@ -111,13 +128,6 @@ src/
     serv/           SERV client, routing + price table, schemas, prompts, trace types
     wallet/         wagmi providers, chains, demo wallet
 ```
-
-## Demo (2 min)
-
-1. Open `/?judge=1` (experts details and the demo bar open).
-2. Avalanche, delayed withdrawals ok: **WAIT** (open vault, deposit limit 0).
-3. "Try BSC instead": **GO**, with risk notes (delayed exit, small vault) and the trace: code rules, SERV risk notes, ranking, verifier.
-4. Connect a wallet on BSC, re-check with the real balance, sign approve then deposit.
 
 ## Safety
 
