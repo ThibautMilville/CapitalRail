@@ -6,6 +6,7 @@ Before any capital moves, CapitalRail checks the live IXS vaults (capacity, whit
 
 | | |
 | --- | --- |
+| Live | https://capitalrail.ozc.fr |
 | Repo | https://github.com/ThibautMilville/CapitalRail |
 | License | MIT |
 

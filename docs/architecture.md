@@ -83,6 +83,11 @@ USDC decimals: 18 on BSC, 6 on Avalanche.
 | `IXS_MCP_URL` | server | `https://api-v2.ixs.finance/mcp` |
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | public | Optional; the WalletConnect connector is only registered when set, injected wallet works without it |
 
+## Production
+
+- URL: https://capitalrail.ozc.fr (Dokploy OZC, Nixpacks Node 22, Traefik + Let's Encrypt).
+- `SERV_API_KEY` may be empty on the host: SERV steps run in deterministic fallback until the key is set in Dokploy.
+
 ## Local run
 
 ```bash
