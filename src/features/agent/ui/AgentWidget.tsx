@@ -640,9 +640,6 @@ export function AgentWidget({
                 {context ? "Ask" : "Send"}
               </button>
             </div>
-            <p className="m-0 text-[0.68rem] text-slate-500">
-              Enter for a new line. Ctrl/Cmd+Enter to send.
-            </p>
           </form>
         </div>
       </div>

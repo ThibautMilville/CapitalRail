@@ -107,9 +107,6 @@ export function IntentComposer({
             disabled={busy}
             aria-label="What do you want to deposit?"
           />
-          <p className="m-0 text-[0.72rem] text-slate-500">
-            Enter for a new line. Ctrl/Cmd+Enter or Check my entry to send.
-          </p>
         </div>
         <div className="flex justify-end">
           <button type="submit" className={btnPrimary} disabled={busy}>
