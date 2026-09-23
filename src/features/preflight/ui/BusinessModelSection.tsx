@@ -61,29 +61,27 @@ export function BusinessModelSection({ stats }: BusinessModelSectionProps) {
       className="scroll-mt-24 rounded-2xl border border-cyan-100/12 bg-[#06171e]/80 p-4 shadow-[0_12px_36px_rgba(0,0,0,0.22)] backdrop-blur-xl sm:p-5 md:p-6"
     >
       <p className="section-kicker m-0">Business model</p>
-      <div className="mt-2 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <h2
-          id="business-title"
-          className="m-0 text-lg font-semibold tracking-[-0.02em] text-slate-100 sm:text-xl"
-        >
-          Every failed deposit avoided is worth something.
-        </h2>
-        <div
-          className="rounded-xl border border-emerald-200/15 bg-emerald-200/[0.04] px-3.5 py-2"
-          aria-live="polite"
-        >
-          <p className="m-0 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-emerald-200/70">
-            Failed deposits avoided on this instance
-          </p>
-          <p className="m-0 mt-0.5 text-[1.35rem] font-semibold leading-none text-emerald-100">
-            {stats ? stats.failedDepositsAvoided.toLocaleString("en-US") : "-"}
-          </p>
-          <p className="m-0 mt-1 font-mono text-[0.62rem] text-slate-500">
-            {stats
-              ? `WAIT + NO-GO served, out of ${stats.preflights} checks since server start (${formatSince(stats.startedAt)})`
-              : "Real count from this server, since start"}
-          </p>
-        </div>
+      <h2
+        id="business-title"
+        className="m-0 mt-2 text-lg font-semibold tracking-[-0.02em] text-slate-100 sm:text-xl"
+      >
+        Every failed deposit avoided is worth something.
+      </h2>
+      <div
+        className="mt-3 w-full rounded-xl border border-emerald-200/15 bg-emerald-200/[0.04] px-3.5 py-2"
+        aria-live="polite"
+      >
+        <p className="m-0 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-emerald-200/70">
+          Failed deposits avoided on this instance
+        </p>
+        <p className="m-0 mt-0.5 text-[1.35rem] font-semibold leading-none text-emerald-100">
+          {stats ? stats.failedDepositsAvoided.toLocaleString("en-US") : "-"}
+        </p>
+        <p className="m-0 mt-1 font-mono text-[0.62rem] text-slate-500">
+          {stats
+            ? `WAIT + NO-GO served, out of ${stats.preflights} checks since server start (${formatSince(stats.startedAt)})`
+            : "Real count from this server, since start"}
+        </p>
       </div>
 
       <ul className="m-0 mt-4 grid list-none grid-cols-1 gap-2.5 p-0 sm:grid-cols-2">

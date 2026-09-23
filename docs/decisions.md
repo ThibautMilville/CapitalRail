@@ -89,3 +89,5 @@ Append-only journal of decisions and user feedback. Format: `YYYY-MM-DD - decisi
 - **Footer**: `.cr-app-shell` uses `min-height: 100dvh; display: flex; flex-direction: column` with page `flex-1` and footer after main (not position sticky/fixed).
 - **Vaults**: `GET /api/vaults` = REST list + parallel `vault_get` + Goldsky activity probe. Page `/vaults` with catalogue cards, TVL donuts, activity list. RailBoard shows TVL + ttm. No fake APY; skip broken logos / null metrics in primary UI.
 - **IXS gaps unchanged**: `vault_request_status` flaky; `vault_build_claim_deposit` unused - not blocking.
+
+- **Business model stats layout (2026-09-23)**: "Failed deposits avoided" counter stacks under the section title at full width (`w-full`). Removed `md:flex-row` / `justify-between` that placed the card beside the title on desktop.
