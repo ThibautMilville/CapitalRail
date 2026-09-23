@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="cr-logo-tile" x1="4" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0a242a"/>
+      <stop offset="1" stop-color="#02090d"/>
+    </linearGradient>
+    <linearGradient id="cr-logo-mark" x1="6" y1="8" x2="26" y2="24" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7af0d0"/>
+      <stop offset="0.55" stop-color="#36b8a6"/>
+      <stop offset="1" stop-color="#5ec8d8"/>
+    </linearGradient>
+    <linearGradient id="cr-logo-hi" x1="8" y1="4" x2="22" y2="14" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f0fff9" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#5beebe" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="1.5" y="1.5" width="29" height="29" rx="8" fill="url(#cr-logo-tile)" stroke="url(#cr-logo-mark)" stroke-width="1.35" stroke-opacity="0.55"/>
+  <path d="M8.5 4.2 H20.5 A6.2 6.2 0 0 1 26.7 10.4" stroke="url(#cr-logo-hi)" stroke-width="1.1" stroke-linecap="round"/>
+  <path d="M24.8 16 L20.6 23.4 L11.4 23.4 L7.2 16 L11.4 8.6 L20.6 8.6 Z" stroke="url(#cr-logo-mark)" stroke-width="2.15" stroke-linejoin="round"/>
+  <path d="M5.2 12.4 H26.8" stroke="url(#cr-logo-mark)" stroke-width="2.35" stroke-linecap="round"/>
+  <path d="M5.2 19.6 H21.2" stroke="url(#cr-logo-mark)" stroke-width="2.35" stroke-linecap="round" opacity="0.72"/>
+</svg>
