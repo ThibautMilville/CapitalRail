@@ -145,16 +145,24 @@ export function IntentComposer({
             {editing ? "Done" : "Edit rules"}
           </button>
         </div>
-        {editing ? (
-          <div id="rules-editor" className="mt-3">
-            <RulesEditor value={mandate} onChange={onRulesChange} disabled={parsing} />
-            <p className="m-0 mt-2 text-[0.72rem] text-slate-500">
-              {hasResult
-                ? "Changes re-check the vaults automatically."
-                : "Press Check my entry when you are ready."}
-            </p>
+        <div
+          id="rules-editor"
+          role="region"
+          aria-label="Rules editor"
+          aria-hidden={!editing}
+          className={`how-it-works-collapse ${editing ? "is-open" : ""}`}
+        >
+          <div className="how-it-works-collapse-inner">
+            <div className="mt-3">
+              <RulesEditor value={mandate} onChange={onRulesChange} disabled={parsing} />
+              <p className="m-0 mt-2 text-[0.72rem] text-slate-500">
+                {hasResult
+                  ? "Changes re-check the vaults automatically."
+                  : "Press Check my entry when you are ready."}
+              </p>
+            </div>
           </div>
-        ) : null}
+        </div>
       </div>
     </div>
   );
