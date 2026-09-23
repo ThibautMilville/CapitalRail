@@ -184,8 +184,8 @@ export function PreflightPage() {
   const { disconnect } = useDisconnect();
   const { switchChain } = useSwitchChain();
   const { notify } = useToast();
-  /** null until wagmi status has settled once (skip reconnect hydration toast). */
-  const wasConnectedRef = useRef<boolean | null>(null);
+  /** True only after the user clicks Connect in this page session. */
+  const userInitiatedConnectRef = useRef(false);
   const [syncedAddress, setSyncedAddress] = useState<string | null>(null);
 
   if (isConnected && address && address !== syncedAddress) {
@@ -231,34 +231,28 @@ export function PreflightPage() {
   }, [refreshStats]);
 
   useEffect(() => {
-    // Wait for reconnect/connect settlement so reload hydration is not a toast.
+    // Ignore reconnect/connect in-flight; only act on settled status.
     if (accountStatus === "reconnecting" || accountStatus === "connecting") {
       return;
     }
 
-    const connected = Boolean(isConnected && address);
-
-    if (wasConnectedRef.current === null) {
-      // First settled observation: record only (wagmi rehydrate / page load).
-      wasConnectedRef.current = connected;
-      return;
-    }
-
-    if (connected && address) {
-      if (wasConnectedRef.current === false) {
-        notify(
-          "success",
-          `Wallet connected - ${address.slice(0, 6)}...${address.slice(-4)}`,
-        );
-      }
-      wasConnectedRef.current = true;
-    } else {
-      wasConnectedRef.current = false;
+    // Toast only after an explicit Connect click in this session (never on reload).
+    if (
+      userInitiatedConnectRef.current &&
+      isConnected &&
+      address
+    ) {
+      notify(
+        "success",
+        `Wallet connected - ${address.slice(0, 6)}...${address.slice(-4)}`,
+      );
+      userInitiatedConnectRef.current = false;
     }
   }, [accountStatus, isConnected, address, notify]);
 
   useEffect(() => {
     if (connectError) {
+      userInitiatedConnectRef.current = false;
       notify("error", connectError.message || "Wallet connect failed");
     }
   }, [connectError, notify]);
@@ -277,6 +271,7 @@ export function PreflightPage() {
       );
       return;
     }
+    userInitiatedConnectRef.current = true;
     connect({ connector });
   }, [connect, connectors, notify]);
 
