@@ -1,6 +1,9 @@
 import type {
+  ClaimBuildResult,
   DepositBuildResult,
+  RedeemBuildResult,
   VaultGetResult,
+  VaultRequestStatusResult,
   WhitelistCheckResult,
 } from "./types";
 
@@ -166,6 +169,33 @@ export async function vaultBuildRequestDeposit(params: {
 }): Promise<DepositBuildResult> {
   const text = await callMcpTool("vault_build_request_deposit", params);
   return JSON.parse(text) as DepositBuildResult;
+}
+
+export async function vaultBuildRequestRedeem(params: {
+  vaultId: string;
+  ownerAddress: string;
+  /** Integer string in share base units. */
+  shareAmount: string;
+}): Promise<RedeemBuildResult> {
+  const text = await callMcpTool("vault_build_request_redeem", params);
+  return JSON.parse(text) as RedeemBuildResult;
+}
+
+export async function vaultBuildClaimRedeem(params: {
+  vaultId: string;
+  ownerAddress: string;
+  requestId: string;
+}): Promise<ClaimBuildResult> {
+  const text = await callMcpTool("vault_build_claim_redeem", params);
+  return JSON.parse(text) as ClaimBuildResult;
+}
+
+export async function vaultRequestStatus(params: {
+  ownerAddress: string;
+  vaultId?: string;
+}): Promise<VaultRequestStatusResult> {
+  const text = await callMcpTool("vault_request_status", params);
+  return JSON.parse(text) as VaultRequestStatusResult;
 }
 
 export function isDepositLimitZeroError(message: string): boolean {

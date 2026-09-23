@@ -78,7 +78,12 @@ export function VerdictCard({
     const snippet = preflightCurl(mandate, window.location.origin);
     void navigator.clipboard
       .writeText(snippet)
-      .then(() => notify("success", "API call copied - paste it in a terminal or your agent."))
+      .then(() =>
+        notify(
+          "success",
+          "API call copied - paste in a terminal or agent. See #agents / openapi.yaml.",
+        ),
+      )
       .catch(() => notify("error", "Could not copy to the clipboard."));
   };
 
@@ -208,7 +213,7 @@ export function VerdictCard({
           type="button"
           className={linkBtn}
           onClick={copyApiCall}
-          title="Copy a ready curl for POST /api/preflight with these rules"
+          title="Copy curl for POST /api/preflight (OpenAPI /openapi.yaml, section #agents)"
         >
           <IconCopy className="h-3.5 w-3.5 shrink-0" />
           Copy as API call

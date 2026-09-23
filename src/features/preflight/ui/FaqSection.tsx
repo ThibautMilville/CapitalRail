@@ -44,6 +44,16 @@ const FAQ_ITEMS: FaqItem[] = [
       "On GO with a connected wallet, IXS tools build two unsigned transactions for the selected vault: approve, then deposit. You sign them in that order in your own wallet, and get an explorer link once confirmed. CapitalRail never broadcasts anything for you.",
   },
   {
+    question: "How do I get my USDC back?",
+    answer:
+      "Scroll to Exit on this page (or open /#exit). Connect the same wallet, pick a vault with shares, prepare an unsigned redeem (and claim on async ERC-7540 vaults), then sign in your wallet. Redemptions often follow a vault cycle - they are not always instant. The IXS request-status feed can be temporarily unavailable; you can still paste a request id to claim.",
+  },
+  {
+    question: "Can other agents call CapitalRail?",
+    answer:
+      "Yes. CapitalRail is built as a preflight tool other agents call before allocating to IXS vaults. See the For agents section (#agents): OpenAPI at /openapi.yaml documents POST /api/preflight and POST /api/intent. No API auth today; calls are rate limited per IP. Optional MCP: npm run mcp with CAPITALRAIL_BASE_URL.",
+  },
+  {
     question: "Is this financial advice?",
     answer:
       "No. CapitalRail is a preflight check on vault access and capacity, not an investment recommendation. Decisions can be wrong or become stale as on-chain state changes, so always review the evidence and the transactions before signing.",

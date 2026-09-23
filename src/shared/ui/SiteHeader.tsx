@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { CapitalRailMark } from "@/shared/ui/CapitalRailMark";
 import { IconDisconnect, IconSwitchNetwork, IconWallet } from "@/shared/ui/icons";
@@ -28,6 +29,10 @@ type SiteHeaderProps = {
   onConnect: () => void;
   onDisconnect: () => void;
   onSwitchNetwork: () => void;
+  /** Logo destination. Default `#top`. */
+  homeHref?: string;
+  /** Href highlighted as the current page (e.g. `/` or `/vaults`). */
+  activeHref?: string;
 };
 
 const statusDot: Record<SiteHeaderStatus["tone"], string> = {
@@ -66,6 +71,8 @@ export function SiteHeader({
   onConnect,
   onDisconnect,
   onSwitchNetwork,
+  homeHref = "#top",
+  activeHref,
 }: SiteHeaderProps) {
   const [scrolled, setScrolled] = useState(false);
   const [walletOpen, setWalletOpen] = useState(false);
@@ -94,29 +101,37 @@ export function SiteHeader({
             : "border-cyan-100/12 bg-[#031016]/38 shadow-[0_8px_30px_rgba(0,0,0,0.16)] backdrop-blur-lg"
         }`}
       >
-        <a
-          href="#top"
+        <Link
+          href={homeHref}
           className="flex shrink-0 items-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
         >
           <CapitalRailMark className="h-8 w-8" />
           <span className="hidden text-lg font-semibold tracking-[-0.03em] text-white min-[400px]:inline">
             CapitalRail
           </span>
-        </a>
+        </Link>
 
         <nav
           className="hidden min-w-0 flex-1 items-center justify-center gap-0.5 md:flex"
           aria-label="Primary"
         >
-          {links.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              className="whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-semibold text-slate-300 transition-colors hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
-            >
-              {link.label}
-            </a>
-          ))}
+          {links.map((link) => {
+            const active = activeHref != null && link.href === activeHref;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={active ? "page" : undefined}
+                className={`whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 ${
+                  active
+                    ? "bg-white/8 text-white"
+                    : "text-slate-300 hover:bg-white/5 hover:text-white"
+                }`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="ml-auto flex shrink-0 items-center gap-2 md:ml-0">
@@ -222,16 +237,20 @@ export function SiteHeader({
             </button>
             {navOpen ? (
               <div className="absolute right-0 top-[calc(100%+0.5rem)] w-56 rounded-xl border border-emerald-200/20 bg-[#06171e]/97 p-1.5 shadow-[0_18px_48px_rgba(0,0,0,0.5)] backdrop-blur-xl">
-                {links.map((link) => (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    className={menuItem}
-                    onClick={() => setNavOpen(false)}
-                  >
-                    {link.label}
-                  </a>
-                ))}
+                {links.map((link) => {
+                  const active = activeHref != null && link.href === activeHref;
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      aria-current={active ? "page" : undefined}
+                      className={`${menuItem} ${active ? "bg-white/5 text-white" : ""}`}
+                      onClick={() => setNavOpen(false)}
+                    >
+                      {link.label}
+                    </Link>
+                  );
+                })}
                 <p className="m-0 flex items-center gap-2 px-3 py-2 font-mono text-[0.68rem] text-slate-500">
                   <span className={`h-1.5 w-1.5 rounded-full ${statusDot[status.tone]}`} />
                   {status.label}

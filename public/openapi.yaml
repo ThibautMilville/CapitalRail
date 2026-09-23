@@ -1,0 +1,302 @@
+openapi: 3.0.3
+info:
+  title: CapitalRail Agent API
+  description: |
+    Preflight gatekeeper for IXS RWA vaults. Other agents call these two endpoints
+    before allocating capital. CapitalRail is not a trading desk: it returns
+    GO / WAIT / NO-GO with reasons, then (on GO with a real wallet) unsigned
+    approve + deposit calldata only.
+
+    Security (honest):
+    - No API auth today. Treat the base URL as a public rate-limited surface.
+    - Per-IP rate limits (in-memory, per instance): preflight 6/min, intent 10/min,
+      plus a shared expensive budget of 12/min across SERV-costly routes.
+    - Browser POSTs with a cross-site Origin header are rejected (403).
+      Missing Origin (curl, server-to-server, MCP) is allowed.
+    - 429 responses include `{ "error", "code": "RATE_LIMITED", "retryAfterSec" }`
+      and a Retry-After header.
+  version: "0.1.0"
+  contact:
+    name: CapitalRail
+    url: https://capitalrail.ozc.fr
+servers:
+  - url: https://capitalrail.ozc.fr
+    description: Production
+  - url: "{baseUrl}"
+    description: Any deployed host
+    variables:
+      baseUrl:
+        default: https://capitalrail.ozc.fr
+paths:
+  /api/preflight:
+    post:
+      operationId: preflight
+      summary: Check whether a wallet can enter an IXS vault
+      description: |
+        Scans live IXS vaults, applies code rules, runs SERV judgment, and returns
+        GO / WAIT / NO-GO. Preview wallet 0x...0001 returns public-data only
+        (preview: true, no tx pack).
+      tags: [preflight]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreflightRequest"
+            example:
+              walletAddress: "0x0000000000000000000000000000000000000001"
+              amount: "1"
+              preferences:
+                allowKyc: false
+                requireSyncSettlement: false
+                preferredChainId: 56
+              forceRescan: false
+      responses:
+        "200":
+          description: Preflight decision
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreflightResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden Origin (browser cross-site)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RateLimited"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/intent:
+    post:
+      operationId: intent
+      summary: Parse free-text intent into a structured mandate
+      description: |
+        Turns a short natural-language message (max 500 chars) into amount,
+        KYC preference, settlement preference, optional preferred chain, summary
+        and confidence. Use the result as preferences for POST /api/preflight.
+      tags: [intent]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IntentRequest"
+            example:
+              message: "500 USDC on BSC, no KYC, delayed withdrawals ok"
+      responses:
+        "200":
+          description: Parsed mandate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IntentResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden Origin (browser cross-site)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RateLimited"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    PreflightRequest:
+      type: object
+      required: [walletAddress, amount, preferences]
+      properties:
+        walletAddress:
+          type: string
+          pattern: "^0x[a-fA-F0-9]{40}$"
+          description: EVM wallet to check. Use 0x...0001 for a public preview.
+        amount:
+          type: string
+          description: USDC amount as a decimal string (e.g. "500").
+        preferences:
+          type: object
+          required: [allowKyc, requireSyncSettlement]
+          properties:
+            allowKyc:
+              type: boolean
+              description: Allow whitelist / KYC vaults.
+            requireSyncSettlement:
+              type: boolean
+              description: Require instant (sync) withdrawals only.
+            preferredChainId:
+              type: integer
+              enum: [56, 43114]
+              description: Hard chain filter. 56 = BSC, 43114 = Avalanche. Omit for any.
+        forceRescan:
+          type: boolean
+          description: When true, bypass the short rail-scan cache for this wallet+amount.
+    PreflightResponse:
+      type: object
+      required:
+        - decision
+        - preview
+        - walletAddress
+        - rejected
+        - riskNotes
+        - trace
+        - rationale
+        - scannedAt
+        - snapshotHash
+        - attestedAt
+      properties:
+        decision:
+          type: string
+          enum: [GO, WAIT, NO-GO]
+        selectedVaultId:
+          type: string
+          nullable: true
+        preview:
+          type: boolean
+          description: True for the placeholder wallet (no tx pack).
+        walletAddress:
+          type: string
+        rejected:
+          type: array
+          items:
+            type: object
+            properties:
+              vaultId: { type: string }
+              reasonCode: { type: string }
+              explanation: { type: string }
+        riskNotes:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        rationale:
+          type: string
+        memoMarkdown:
+          type: string
+        userNextSteps:
+          type: array
+          items: { type: string }
+        reasoning:
+          type: string
+          enum: [serv, fallback]
+        intentReading:
+          type: string
+        disagreements:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        verification:
+          type: object
+          additionalProperties: true
+        rails:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        trace:
+          type: object
+          description: Step sources, latency, tokens, guard, disagreements summary.
+          additionalProperties: true
+        txPack:
+          type: object
+          description: Unsigned approve + deposit when decision is GO and not preview.
+          additionalProperties: true
+        scannedAt:
+          type: string
+          format: date-time
+        snapshotHash:
+          type: string
+        attestedAt:
+          type: string
+          format: date-time
+    IntentRequest:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 500
+    IntentResponse:
+      type: object
+      required:
+        - amount
+        - allowKyc
+        - requireSyncSettlement
+        - preferredChainId
+        - summary
+        - confidence
+        - reasoning
+        - trace
+      properties:
+        amount:
+          type: string
+        allowKyc:
+          type: boolean
+        requireSyncSettlement:
+          type: boolean
+        preferredChainId:
+          type: string
+          nullable: true
+          enum: ["56", "43114", null]
+        summary:
+          type: string
+        confidence:
+          type: string
+          enum: [high, medium, low]
+        reasoning:
+          type: string
+          enum: [serv, fallback]
+        trace:
+          type: object
+          additionalProperties: true
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+    RateLimited:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+          enum: [RATE_LIMITED]
+        retryAfterSec:
+          type: integer
+tags:
+  - name: preflight
+    description: Capacity and rule check before deposit
+  - name: intent
+    description: Free text to structured mandate

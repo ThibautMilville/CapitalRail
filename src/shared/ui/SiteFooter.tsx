@@ -30,7 +30,7 @@ export function SiteFooter() {
         <div className="min-w-0 text-center sm:text-left">
           <p className="m-0 text-sm text-slate-400">&copy; 2026 CapitalRail</p>
           <p className="m-0 mt-1.5 font-mono text-[0.68rem] leading-relaxed text-slate-600">
-            SERV Hackathon - IXS entry preflight
+            SERV Hackathon - IXS entry and exit
           </p>
         </div>
 

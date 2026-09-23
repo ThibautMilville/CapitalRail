@@ -29,7 +29,7 @@ export const metadata: Metadata = {
 const introBootScript = `
 try {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    document.documentElement.classList.add("cr-intro-done");
+    document.documentElement.classList.add("cr-intro-done", "cr-intro-chrome-ready");
   }
 } catch (e) {}
 `;

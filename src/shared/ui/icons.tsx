@@ -99,6 +99,32 @@ export function IconDeposit({ className = "h-4 w-4", ...props }: IconProps) {
   );
 }
 
+export function IconWithdraw({ className = "h-4 w-4", ...props }: IconProps) {
+  return (
+    <svg {...base} className={className} {...props}>
+      <path
+        d="M8 13.5 V5.5"
+        stroke="currentColor"
+        strokeWidth="1.35"
+        strokeLinecap="round"
+      />
+      <path
+        d="M5 8.5 L8 5.5 L11 8.5"
+        stroke="currentColor"
+        strokeWidth="1.35"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M3 2.75 H13"
+        stroke="currentColor"
+        strokeWidth="1.35"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export function IconSend({ className = "h-4 w-4", ...props }: IconProps) {
   return (
     <svg {...base} className={className} {...props}>

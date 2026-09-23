@@ -6,6 +6,12 @@ export type UnderlyingAsset = {
   address: `0x${string}`;
 };
 
+export type IxsVaultTransparency = {
+  description?: string | null;
+  faq?: { question: string; answer: string }[] | null;
+  riskBullets?: string[] | null;
+};
+
 export type IxsVaultListItem = {
   id: string;
   routeId: string;
@@ -16,12 +22,18 @@ export type IxsVaultListItem = {
   chainName: string;
   contractAddress: `0x${string}`;
   explorerUrl?: string;
+  /** Goldsky (or other) subgraph HTTP endpoint; may omit trailing `/gn`. */
+  subgraphUrl?: string | null;
   rpcUrl?: string;
+  logoUrl?: string | null;
   underlyingAsset: UnderlyingAsset;
   productId?: string;
   requiresWhitelist: boolean;
   status: string;
+  /** IXS-reported time to maturity - not APY. */
   ttm?: number | null;
+  metrics?: unknown;
+  transparency?: IxsVaultTransparency | null;
   actions?: string[];
 };
 
@@ -33,15 +45,17 @@ export type IxsVaultsResponse = {
   totalPages: number;
 };
 
+export type VaultPricing = {
+  totalAssets?: string;
+  totalSupply?: string;
+  pricePerShare?: string;
+};
+
 export type VaultGetResult = {
   ok: boolean;
   settlement: SettlementKind;
   vault: IxsVaultListItem;
-  pricing?: {
-    totalAssets?: string;
-    totalSupply?: string;
-    pricePerShare?: string;
-  };
+  pricing?: VaultPricing;
 };
 
 export type WhitelistCheckResult = {
@@ -73,6 +87,46 @@ export type DepositBuildResult = {
   asset: UnderlyingAsset;
   amount: { baseUnits: string; decimals: number };
   steps: TxStep[];
+};
+
+export type RedeemBuildResult = {
+  ok: boolean;
+  settlement: SettlementKind;
+  chainId: number;
+  network: string;
+  vault: { id: string; address: `0x${string}` };
+  ownerAddress: `0x${string}`;
+  shares: { baseUnits: string; decimals: number; symbol?: string };
+  steps: TxStep[];
+};
+
+export type ClaimBuildResult = {
+  ok: boolean;
+  settlement: SettlementKind;
+  chainId: number;
+  network: string;
+  vault: { id: string; address: `0x${string}` };
+  ownerAddress: `0x${string}`;
+  requestId: string;
+  steps: TxStep[];
+};
+
+export type VaultRequestItem = {
+  requestId: string;
+  type?: string;
+  kind?: string;
+  status: string;
+  shareAmount?: string;
+  assetAmount?: string;
+  claimable?: boolean;
+  [key: string]: unknown;
+};
+
+export type VaultRequestStatusResult = {
+  ok?: boolean;
+  requests?: VaultRequestItem[];
+  items?: VaultRequestItem[];
+  [key: string]: unknown;
 };
 
 export type PositionResult = {

@@ -28,5 +28,8 @@ Ideas log. Status: `done`, `in progress`, `idea`, `rejected`. Append new ideas a
 | 2026-09-23 | SERV risk notes + rules cross-check with disagreements | done | Replaces the eligibility restatement; "rules = code, judgment = SERV" |
 | 2026-09-23 | Copy as API call under the verdict | done | Curl for POST /api/preflight with the current rules |
 | 2026-09-23 | Business model section + real "failed deposits avoided" counter | done | In-memory per instance, `/api/stats` |
-| 2026-09-23 | Stream per-vault progress during the check | idea | Honest label + elapsed counter shipped instead |
+| 2026-09-23 | Exit / redeem flow using IXS MCP | done | In-page `#exit` section on `/` (redirect from `/exit`); redeem + claim; status feed graceful fallback |
 | 2026-09-23 | Blocked-demand dashboard for IXS | idea | Aggregate WAIT / NO-GO causes per vault for the issuer |
+| 2026-09-23 | Public `/vaults` catalog page | done | Live inventory: REST `/vaults` (4) + MCP `vault_get` pricing; show chain, KYC, settlement, TVL, price/share, ttm as maturity (not APY), transparency when present; CTA Check entry / Exit. Prefer REST list over MCP `vaults_list` (only 2 whitelist vaults). Skip null metrics, inactive ixsRewards, subgraph/rpc/ratePool. |
+| 2026-09-23 | OpenJEV (Jev) for GO/WAIT/NO-GO class | rejected | TypeSafe System One via openjev.sh; real API, not OpenServ. Outcome stays code-owned; no OPENJEV_API_KEY; would not help SERV-meaningful scoring. Optional advisory-only later if a key appears. |
+| 2026-09-23 | Agent-facing REST + OpenAPI + thin MCP | done | Section `#agents`, `public/openapi.yaml` (preflight + intent only), curl/tool snippets, `mcp/server.ts` via `npm run mcp` |

@@ -38,6 +38,7 @@ import {
 } from "@/features/preflight/ui/ExpertDetails";
 import { FaqSection } from "@/features/preflight/ui/FaqSection";
 import { FlowStepper, type FlowStep } from "@/features/preflight/ui/FlowStepper";
+import { ForAgentsSection } from "@/features/preflight/ui/ForAgentsSection";
 import { HowItWorksSection } from "@/features/preflight/ui/HowItWorksSection";
 import { IntentComposer } from "@/features/preflight/ui/IntentComposer";
 import { JudgeDemoBar } from "@/features/preflight/ui/JudgeDemoBar";
@@ -46,6 +47,7 @@ import { RoadmapRails } from "@/features/preflight/ui/RoadmapRails";
 import { SignPanel } from "@/features/preflight/ui/SignPanel";
 import { VerdictCard } from "@/features/preflight/ui/VerdictCard";
 import { WhyCapitalRailSection } from "@/features/preflight/ui/WhyCapitalRailSection";
+import { ExitPanel } from "@/features/exit/ui/ExitPanel";
 import type { ReasoningStepTrace } from "@/shared/serv/trace-types";
 import { CapitalRailMark } from "@/shared/ui/CapitalRailMark";
 import { BrandGlowTitle } from "@/shared/ui/GlowTitle";
@@ -62,7 +64,9 @@ type HealthState = {
 };
 
 const HEADER_LINKS = [
+  { href: "/vaults", label: "Vaults" },
   { href: "#how", label: "How it works" },
+  { href: "#agents", label: "Agents" },
   { href: "#business", label: "Business" },
   { href: "#faq", label: "FAQ" },
 ];
@@ -446,9 +450,11 @@ export function PreflightPage() {
       : 0;
 
   return (
-    <div id="top" className="relative min-h-dvh overflow-x-hidden">
+    <div id="top" className="relative flex min-h-0 flex-1 flex-col overflow-x-hidden">
       <SiteHeader
         links={HEADER_LINKS}
+        activeHref="/"
+        homeHref="#top"
         status={headerStatus}
         wallet={{
           address: walletConnected ? (address ?? null) : null,
@@ -465,7 +471,7 @@ export function PreflightPage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_18%,rgba(21,125,116,0.12),transparent_36%),linear-gradient(180deg,#02090d_0%,#031017_72%,#02090d_100%)]" />
       </div>
 
-      <main className="mx-auto flex w-full max-w-[1100px] flex-col gap-5 px-3 pb-28 pt-24 sm:gap-6 sm:px-4 sm:pb-12 sm:pt-28 md:px-6">
+      <main className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col gap-5 px-3 pb-28 pt-24 sm:gap-6 sm:px-4 sm:pb-12 sm:pt-28 md:px-6">
         <header className="relative min-w-0">
           <p className="section-kicker m-0 max-w-full">
             SERV Hackathon - RWA Vaults - IXS
@@ -477,19 +483,30 @@ export function PreflightPage() {
             </h1>
           </div>
           <p className="mt-3 w-full max-w-none text-[0.95rem] leading-snug text-slate-400 sm:text-[1.02rem]">
-            Check if you can really enter an IXS vault before you sign
-            anything. GO only when deposit capacity is real.{" "}
+            Check if you can really enter an IXS vault before you sign anything.
+            GO only when deposit capacity is real.{" "}
             <a
               href="#how"
               className="whitespace-nowrap text-cyan-200/80 underline-offset-2 hover:text-cyan-100 hover:underline"
             >
               How it works
             </a>
+            {" · "}
+            <a
+              href="#exit"
+              className="whitespace-nowrap text-cyan-200/80 underline-offset-2 hover:text-cyan-100 hover:underline"
+            >
+              Exit
+            </a>
           </p>
         </header>
 
         {judge ? (
-          <JudgeDemoBar stage={depositDone && demoStage === 2 ? 3 : demoStage} loading={loading} onStart={onStartDemo} />
+          <JudgeDemoBar
+            stage={depositDone && demoStage === 2 ? 3 : demoStage}
+            loading={loading}
+            onStart={onStartDemo}
+          />
         ) : null}
 
         <section
@@ -589,13 +606,30 @@ export function PreflightPage() {
           </>
         ) : null}
 
+        <div className="mt-2 flex flex-col gap-3 sm:mt-3">
+          <div>
+            <p className="section-kicker m-0">Exit</p>
+            <h2 className="m-0 mt-1.5 text-xl font-semibold tracking-[-0.02em] text-[#f5fbfd] sm:text-2xl">
+              Redeem vault shares
+            </h2>
+            <p className="m-0 mt-2 max-w-xl text-[0.92rem] leading-snug text-slate-400">
+              Turn shares back into USDC. CapitalRail prepares unsigned redeem
+              and claim steps - you sign, nothing is custodied.
+            </p>
+          </div>
+          <ExitPanel />
+        </div>
+
         <HowItWorksSection />
         <WhyCapitalRailSection />
+        <ForAgentsSection />
         <BusinessModelSection stats={stats} />
         <FaqSection />
-
-        <SiteFooter />
       </main>
+
+      <div className="mx-auto w-full max-w-[1100px] px-3 pb-24 sm:px-4 sm:pb-8 md:px-6">
+        <SiteFooter />
+      </div>
 
       <AgentWidget
         ref={agentRef}

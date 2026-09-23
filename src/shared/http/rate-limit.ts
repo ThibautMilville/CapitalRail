@@ -18,8 +18,12 @@ export const RATE_LIMITS = {
   intent: { name: "intent", limit: 10, windowMs: 60_000 },
   agent: { name: "agent", limit: 10, windowMs: 60_000 },
   position: { name: "position", limit: 20, windowMs: 60_000 },
+  exitPositions: { name: "exit-positions", limit: 12, windowMs: 60_000 },
+  exitBuild: { name: "exit-build", limit: 12, windowMs: 60_000 },
+  exitStatus: { name: "exit-status", limit: 20, windowMs: 60_000 },
   health: { name: "health", limit: 30, windowMs: 60_000 },
   stats: { name: "stats", limit: 30, windowMs: 60_000 },
+  vaults: { name: "vaults", limit: 20, windowMs: 60_000 },
   /** Shared budget across preflight + intent + agent (SERV / IXS scan). */
   expensive: { name: "expensive", limit: 12, windowMs: 60_000 },
 } satisfies Record<string, RateLimitRule>;

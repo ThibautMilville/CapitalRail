@@ -69,11 +69,22 @@ export function OpeningIntro({ children }: { children: ReactNode }) {
   const handleRef = useRef<IntroSceneHandle | null>(null);
   const completedRef = useRef(false);
 
+  const unlockScroll = useCallback(() => {
+    document.documentElement.classList.remove("cr-intro-scroll-lock");
+    document.body.classList.remove("cr-intro-active");
+  }, []);
+
+  /** Agent launcher / teaser may show only after overlay is fully gone. */
+  const markChromeReady = useCallback(() => {
+    document.documentElement.classList.add("cr-intro-chrome-ready");
+  }, []);
+
   const complete = useCallback(() => {
     if (completedRef.current) return;
     completedRef.current = true;
+    // Shell may fade in under the exiting overlay; agent chrome stays hidden
+    // until phase === "done" (see cr-intro-chrome-ready).
     document.documentElement.classList.add("cr-intro-done");
-    document.body.classList.remove("cr-intro-active");
     setPhase((current) => (current === "done" ? current : "exiting"));
   }, []);
 
@@ -82,13 +93,21 @@ export function OpeningIntro({ children }: { children: ReactNode }) {
     if (reducedMotion) {
       completedRef.current = true;
       document.documentElement.classList.add("cr-intro-done");
-      document.body.classList.remove("cr-intro-active");
+      markChromeReady();
+      unlockScroll();
       return;
     }
     if (!completedRef.current) {
+      document.documentElement.classList.add("cr-intro-scroll-lock");
       document.body.classList.add("cr-intro-active");
     }
-  }, [reducedMotion]);
+  }, [reducedMotion, unlockScroll, markChromeReady]);
+
+  useEffect(() => {
+    if (phase !== "done") return;
+    unlockScroll();
+    markChromeReady();
+  }, [phase, unlockScroll, markChromeReady]);
 
   useEffect(() => {
     if (phase !== "playing") return;
@@ -136,6 +155,35 @@ export function OpeningIntro({ children }: { children: ReactNode }) {
     return () => window.clearTimeout(timer);
   }, [phase]);
 
+  useEffect(() => {
+    if (phase === "done" || phase === "checking") return;
+    const blockScroll = (event: Event) => {
+      const target = event.target;
+      if (
+        target instanceof Element &&
+        target.closest(".cr-intro-skip, .cr-intro-overlay button")
+      ) {
+        return;
+      }
+      event.preventDefault();
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" || event.key === "Esc") {
+        event.preventDefault();
+        complete();
+      }
+    };
+    const opts: AddEventListenerOptions = { passive: false };
+    window.addEventListener("wheel", blockScroll, opts);
+    window.addEventListener("touchmove", blockScroll, opts);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("wheel", blockScroll, opts);
+      window.removeEventListener("touchmove", blockScroll, opts);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [phase, complete]);
+
   const showOverlay = phase === "playing" || phase === "exiting";
 
   return (
@@ -160,16 +208,7 @@ export function OpeningIntro({ children }: { children: ReactNode }) {
             onClick={complete}
             aria-label="Skip intro"
           >
-            <svg viewBox="0 0 16 16" aria-hidden="true">
-              <path
-                d="M4 3.5 9 8l-5 4.5M10.5 3.5v9"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            Skip
           </button>
         </div>
       ) : null}

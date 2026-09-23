@@ -65,6 +65,46 @@ Next.js (App Router), React, TypeScript, Tailwind CSS, wagmi / viem, zod, Three.
 
 No invented metrics: the page shows a real counter "Failed deposits avoided on this instance" (WAIT + NO-GO served by this server since start, in-memory), exposed on `GET /api/stats` and `GET /api/health`.
 
+## For agents
+
+CapitalRail is a **preflight gatekeeper** other agents call before allocating to IXS vaults - not a trading desk.
+
+| | |
+| --- | --- |
+| OpenAPI 3 | [`/openapi.yaml`](./public/openapi.yaml) (live: https://capitalrail.ozc.fr/openapi.yaml) |
+| UI | Section `#agents` on the home page (nav: Agents) |
+| Tools | `POST /api/preflight` (GO / WAIT / NO-GO) and `POST /api/intent` (message → mandate) |
+
+Copy-paste curls, OpenAI/Anthropic tool JSON, and Cursor MCP config live in the For agents section. No API auth today; rate limited per IP; browser cross-site Origin blocked.
+
+### MCP (optional)
+
+Thin stdio MCP that HTTP-calls the same REST API:
+
+```bash
+# default CAPITALRAIL_BASE_URL=https://capitalrail.ozc.fr
+npm run mcp
+```
+
+Cursor example (`mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "capitalrail": {
+      "command": "npx",
+      "args": ["tsx", "mcp/server.ts"],
+      "cwd": "/absolute/path/to/CapitalRail",
+      "env": {
+        "CAPITALRAIL_BASE_URL": "https://capitalrail.ozc.fr"
+      }
+    }
+  }
+}
+```
+
+Tools: `capitalrail_preflight`, `capitalrail_intent`.
+
 ## API
 
 All endpoints are rate limited per IP (in-memory): 429 with `{ "error", "code": "RATE_LIMITED", "retryAfterSec" }` and a `Retry-After` header.
@@ -118,16 +158,20 @@ Checks: `npx tsc --noEmit`, `npm run lint`, `npm test` (node:test via tsx).
 
 ```
 src/
-  app/api/          agent, health, intent, position, preflight, stats
+  app/api/          agent, health, intent, position, preflight, stats, exit/*, vaults
   features/agent/   decision agent (lib + widget)
   features/preflight/
-    lib/            scan-rails, decide-preflight (+ tests), run-preflight, verdict, api-snippet
-    ui/             guided flow, verdict card, reasoning trace, business model section
+    lib/            scan-rails, decide-preflight (+ tests), run-preflight, verdict, api-snippet, agent-api-docs
+    ui/             guided flow, verdict card, ForAgentsSection, business model section
   shared/
-    http/           rate-limit, instance-stats
+    http/           rate-limit, instance-stats, origin
     ixs/            REST + MCP clients
     serv/           SERV client, routing + price table, schemas, prompts, trace types
     wallet/         wagmi providers, chains, demo wallet
+mcp/
+  server.ts         thin MCP (capitalrail_preflight, capitalrail_intent) → HTTP API
+public/
+  openapi.yaml      OpenAPI 3 for the two agent tools
 ```
 
 ## Safety

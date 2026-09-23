@@ -14,11 +14,19 @@
 src/
   app/
     api/agent/route.ts, api/health/route.ts, api/intent/route.ts,
-    api/position/route.ts, api/preflight/route.ts, api/stats/route.ts
-    layout.tsx, page.tsx, globals.css, icon.svg
+    api/position/route.ts, api/preflight/route.ts, api/stats/route.ts,
+    api/exit/positions|redeem|claim|requests/route.ts, api/vaults/route.ts
+    exit/page.tsx (redirect to /#exit), vaults/page.tsx, layout.tsx, page.tsx,
+    globals.css, icon.svg
   features/agent/
     lib/  agent-schema, answer-question, fallback-answer (+ .test)
     ui/   AgentWidget (bottom-right launcher, teaser, panel)
+  features/exit/
+    lib/  build-exit, scan-positions, types
+    ui/   ExitPanel, ExitSignPanel
+  features/vaults/
+    lib/  build-catalog, fetch-activity, types
+    ui/   VaultsPage, TvlDonut
   features/preflight/
     lib/  api-snippet, attest-snapshot, decide-preflight (+ .test),
           intent-schema, mandate, parse-intent, request-intent, run-preflight,
@@ -29,7 +37,7 @@ src/
           ReasoningTrace, RoadmapRails, RulesEditor, SignPanel, VerdictCard,
           WhyCapitalRailSection
   shared/
-    http/    rate-limit.ts, instance-stats.ts
+    http/    rate-limit.ts, instance-stats.ts, safe-error.ts
     ixs/     mcp.ts, rest.ts, types.ts
     serv/    client.ts, config.ts, schema.ts, system-prompt.ts, trace-types.ts
     ui/      CapitalRailMark, CustomCursor, GlowTitle, OpeningIntro,
@@ -37,7 +45,7 @@ src/
     wallet/  chains.ts, demo-wallet.ts, Providers.tsx
 ```
 
-Snapshot as of 2026-09-23 (guided flow). Update when files are added or moved.
+Snapshot as of 2026-09-23 (guided flow + in-page exit + vaults catalogue). Update when files are added or moved.
 
 Removed on 2026-09-23: `IntentChat`, `MandateBar`, `MandateForm`, `FlipBanner`, `HowItWorks`, `DecisionMemo`, `TxPackPanel`, `shared/ui/Skeleton` (replaced by `IntentComposer`, `RulesEditor`, `VerdictCard`, `SignPanel`, `ExpertDetails`, `CheckingPanel`).
 
@@ -47,7 +55,7 @@ Removed on 2026-09-23: `IntentChat`, `MandateBar`, `MandateForm`, `FlipBanner`, 
 2. `POST /api/intent` parses it into a mandate (amount, chain, constraints) shown as "We understood" pills. Chain is a hard rule.
 3. `POST /api/preflight` runs `scanRails`:
    - IXS REST `GET /vaults`
-   - IXS MCP `POST https://api-v2.ixs.finance/mcp` (JSON-RPC over SSE), tools `vault_get`, `vault_check_whitelist`, `vault_build_request_deposit`.
+   - IXS MCP `POST https://api-v2.ixs.finance/mcp` (JSON-RPC over SSE), tools `vault_get`, `vault_check_whitelist`, `vault_build_request_deposit`, plus exit tools `vault_build_request_redeem`, `vault_build_claim_redeem`, `vault_request_status`.
    - A `User-Agent` header is required, otherwise IXS returns 403.
 4. `decidePreflight` ("rules = code, judgment = SERV", since 2026-09-23):
    - `rules` (code, authoritative): per vault eligible + most blocking reason (chain, then settlement / KYC, then capacity); outcome GO / WAIT / NO-GO.
@@ -59,6 +67,22 @@ Removed on 2026-09-23: `IntentChat`, `MandateBar`, `MandateForm`, `FlipBanner`, 
 6. On GO: unsigned tx pack + `snapshotHash` / `attestedAt`. With the placeholder demo wallet (`0x...0001`) the response is `preview: true` and carries no tx pack.
 7. With a real wallet, `scanRails` compares the wallet USDC balance with the amount and blocks the rail with `INSUFFICIENT_BALANCE`.
 8. `SignPanel` signs approve then deposit in order (waits for each receipt), then shows explorer links and the position from `GET /api/position?vaultId&wallet` (`shares`, `shareValueInAssets`, `assetBalance`).
+
+### Exit flow (`#exit` on `/`)
+
+1. `GET /api/exit/positions?wallet` lists vaults with share balance / maxRedeem via REST positions + `vault_get` settlement.
+2. `POST /api/exit/redeem` calls `vault_build_request_redeem` (share amount in base units). Settlement may be `queued` (no claim step) or `async-erc7540` (claim later).
+3. `POST /api/exit/claim` calls `vault_build_claim_redeem` when a request id is claimable.
+4. `GET /api/exit/requests` wraps `vault_request_status` (IXS feed can be down; the UI then accepts a pasted request id).
+
+`ExitPanel` is embedded in `PreflightPage` below the entry flow; `/exit` only redirects to `/#exit`.
+
+### Vaults catalogue (`/vaults`, `GET /api/vaults`)
+
+1. REST `GET /vaults` is the source of truth for the list (4 items) - do not use MCP `vaults_list` alone.
+2. Parallel MCP `vault_get` enriches settlement + pricing (`totalAssets`, `pricePerShare`, `totalSupply`).
+3. Optional Goldsky activity via each vault `subgraphUrl` (normalize trailing `/gn`): ERC-7540 `depositRequests` / `redeemRequests`, or managed `vaultActivities`. Honest empty state when probes fail - no invented txs.
+4. UI: cards, TVL donuts (by vault and by chain), recent activity list. `ttm` labeled as time to maturity, never APY.
 
 ## Live IXS vaults (IX High Yield Bond USDC)
 
@@ -113,3 +137,10 @@ fuser -k 3456/tcp; nohup npm run start -- -p 3456 > /tmp/capitalrail.log 2>&1 &
 - Live SERV run once `SERV_API_KEY` is available (routing and prompts are ready, only fallback verified so far).
 
 Done: multi-step pipeline (code rules -> SERV risk notes + cross-check -> ranking -> verifier, traced, deterministic fallback without `SERV_API_KEY`), model routing via env, bottom-right decision agent on `/api/agent` (also answers general questions without a check).
+
+## Agent API surface (2026-09-23)
+
+- Static OpenAPI 3: `public/openapi.yaml` (served at `/openapi.yaml`) - documents only `POST /api/preflight` and `POST /api/intent`.
+- UI: `ForAgentsSection` (`#agents`) with curls, tool JSON, MCP Cursor config; header link Agents.
+- Thin MCP: `mcp/server.ts` (`npm run mcp`), tools `capitalrail_preflight` / `capitalrail_intent`, env `CAPITALRAIL_BASE_URL` (default `https://capitalrail.ozc.fr`). Proxies to the Next routes; no duplicated decision logic.
+- Snippets: `src/features/preflight/lib/agent-api-docs.ts`.

@@ -973,6 +973,24 @@ body {
   }
 }
 
+/*
+ * Agent chrome stays hidden until the intro overlay is fully gone.
+ * `cr-intro-done` is set at the start of the exit fade (shell may reveal under
+ * it); `cr-intro-chrome-ready` is added only when phase is done / reduced-motion.
+ * CSS covers first paint before hydration; JS teaser also checks the class.
+ * display:none on the root so fixed launcher cannot paint under a fading overlay.
+ */
+html:not(.cr-intro-chrome-ready) .cr-agent-root {
+  display: none !important;
+}
+
+html:not(.cr-intro-chrome-ready) [class^="cr-agent-"],
+html:not(.cr-intro-chrome-ready) [class*=" cr-agent-"] {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 /* Opening intro - hide shell until done (boot script may add .cr-intro-done) */
 html:not(.cr-intro-done) .cr-app-shell:not(.is-revealed) {
   opacity: 0;
@@ -981,6 +999,8 @@ html:not(.cr-intro-done) .cr-app-shell:not(.is-revealed) {
 
 .cr-app-shell {
   min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
   transition: opacity 0.45s ease;
 }
 
@@ -994,8 +1014,26 @@ html.cr-intro-done .cr-app-shell {
   pointer-events: auto;
 }
 
+/* No page scroll / scrollbar until the intro overlay is fully gone */
+html:not(.cr-intro-done),
+html.cr-intro-scroll-lock {
+  overflow: hidden;
+  overscroll-behavior: none;
+  scrollbar-gutter: auto;
+  scrollbar-width: none;
+}
+
+html:not(.cr-intro-done)::-webkit-scrollbar,
+html.cr-intro-scroll-lock::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+html:not(.cr-intro-done) body,
 body.cr-intro-active {
   overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
 }
 
 .cr-intro-overlay {
@@ -1097,34 +1135,44 @@ body.cr-intro-active {
   transform: translateY(-0.4rem);
 }
 
+/*
+ * Skip control: never a dark circle FAB (old skip-forward SVG read as "k >").
+ * Fully invisible during the cinematic intro; fade in only on hover / focus.
+ * Escape also skips (OpeningIntro).
+ */
 .cr-intro-skip {
   position: absolute;
-  right: max(1rem, env(safe-area-inset-right));
-  bottom: max(1rem, env(safe-area-inset-bottom));
+  right: max(0.5rem, env(safe-area-inset-right));
+  bottom: max(0.5rem, env(safe-area-inset-bottom));
   z-index: 2;
-  display: grid;
-  place-items: center;
-  width: 2.5rem;
-  height: 2.5rem;
+  margin: 0;
+  padding: 0.55rem 0.75rem;
   cursor: pointer;
-  border-radius: 999px;
-  border: 1px solid rgba(167, 243, 208, 0.12);
-  background: rgba(255, 255, 255, 0.02);
-  color: rgba(148, 163, 184, 0.6);
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: rgba(226, 232, 240, 0.8);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0;
   touch-action: manipulation;
   transition:
-    color 0.2s ease,
-    border-color 0.2s ease;
+    opacity 0.2s ease,
+    color 0.2s ease;
 }
 
-.cr-intro-skip svg {
-  width: 0.95rem;
-  height: 0.95rem;
-}
-
-.cr-intro-skip:hover {
-  border-color: rgba(167, 243, 208, 0.32);
+.cr-intro-skip:hover,
+.cr-intro-skip:focus-visible {
+  opacity: 1;
   color: #e2e8f0;
+}
+
+.cr-intro-skip:focus-visible {
+  outline: 2px solid #6ee7b7;
+  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {

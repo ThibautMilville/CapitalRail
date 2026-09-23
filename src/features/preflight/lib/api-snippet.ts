@@ -19,8 +19,11 @@ export function preflightRequestBody(values: MandateValues, forceRescan = false)
 /** Ready-to-paste curl for the same check, for agents and wallets. */
 export function preflightCurl(values: MandateValues, origin: string): string {
   const body = JSON.stringify(preflightRequestBody(values), null, 2);
+  const base = origin.replace(/\/$/, "");
   return [
-    `curl -s -X POST ${origin}/api/preflight \\`,
+    `# CapitalRail preflight - OpenAPI: ${base}/openapi.yaml`,
+    `# Docs: ${base}/#agents`,
+    `curl -s -X POST ${base}/api/preflight \\`,
     `  -H 'Content-Type: application/json' \\`,
     `  -d '${body.replace(/'/g, "'\\''")}'`,
   ].join("\n");

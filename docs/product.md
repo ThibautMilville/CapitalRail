@@ -2,11 +2,15 @@
 
 ## Vision
 
-CapitalRail is an **IXS entry preflight agent**. Before any capital moves, it:
+CapitalRail is an **IXS entry and exit agent**. Before any capital moves, it:
 
 1. scans the live IXS rails (vaults, limits, whitelists),
 2. applies the hard rules in code (**GO / NO-GO / WAIT**) and lets SERV do the judgment: risk notes grounded in IXS facts, an independent cross-check of the rules, ranking with a rationale, the memo and a verifier that can veto a GO,
 3. packs **unsigned** transactions only when capacity is real.
+
+On **Exit** (section `#exit` lower on the same home page), it lists the wallet's vault shares and packs unsigned redeem (and claim on async ERC-7540 vaults) from the same IXS MCP tools.
+
+A dedicated **Vaults** page (`/vaults`) shows the live IXS catalogue: access, settlement, TVL, ttm (maturity), TVL donut charts, and recent subgraph activity when available.
 
 ## Product thesis
 
@@ -30,7 +34,10 @@ Guided flow in four steps, shown by a stepper: **Tell us -> We check -> Decision
 - **Details for experts** (collapsed): SERV trace, all vaults, evidence, naive agent vs CapitalRail, pipeline, memo and proof. `?judge=1` opens it by default and shows a demo bar (Avalanche WAIT -> Try BSC -> GO -> sign).
 - **Decision agent (bottom-right)**: logo-only launcher with a contextual teaser; before a verdict it turns free text into rules, after a verdict it explains the decision and can apply rule changes.
 - **Vocabulary**: "vault" not "rail", "instant / delayed withdrawals" not "sync / async", "KYC" not "whitelist" in user copy.
-- Explainer sections (How it works, Why CapitalRail, Business model, FAQ) stay at the bottom; header nav is "How it works", "Business" and "FAQ" plus the wallet menu.
+- Explainer sections (How it works, Why CapitalRail, **For agents** `#agents`, Business model, FAQ) stay near the bottom; header nav is **Vaults** (`/vaults`), How it works, **Agents**, Business and FAQ plus the wallet menu - no Enter/Exit mode toggle in the header.
+- **For agents** (2026-09-23): positions CapitalRail as a preflight tool other agents call (gatekeeper, not desk). OpenAPI at `/openapi.yaml` documents `POST /api/preflight` and `POST /api/intent`. Curl examples, OpenAI/Anthropic tool JSON, optional MCP (`npm run mcp`). No auth today; rate limited; Origin checks for browsers.
+- **Home page**: Enter/preflight flow at the top (`#flow`); dedicated **Exit** section lower on the same page (`#exit`) for redeem/claim only. `/exit` redirects to `/#exit`. Post-deposit success links to `#exit`.
+- **Vaults page** (`/vaults`): catalogue of the 4 live IXS vaults (REST list + MCP `vault_get`), TVL donuts, optional Goldsky activity, CTAs to Enter and Exit. No fake APY.
 - **Agent panel**: fixed height (desktop / tablet card, mobile bottom sheet), only messages scroll. Without a check it answers general questions and offers to run one.
 
 ## Revenue (Business model section, 2026-09-23)

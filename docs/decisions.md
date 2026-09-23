@@ -93,3 +93,21 @@ Append-only journal of decisions and user feedback. Format: `YYYY-MM-DD - decisi
 - **Business model stats layout (2026-09-23)**: "Failed deposits avoided" counter stacks under the section title at full width (`w-full`). Removed `md:flex-row` / `justify-between` that placed the card beside the title on desktop.
 
 - **IntentComposer layout (2026-09-23)**: textarea full width with `resize-none` (no native resize grip). "Check my entry" sits below in a `justify-end` row, not beside the field on `sm+`. Enter = newline, Ctrl/Cmd+Enter submit unchanged.
+
+## 2026-09-23 (Jev / OpenJEV for GO-WAIT-NO-GO - not integrated)
+
+- **What it is**: "Jev" here is TypeSafe's System One model, exposed publicly as **OpenJEV** (`https://openjev.sh`, `POST https://api.openjev.sh/v1/systemone`, env `OPENJEV_API_KEY`). Typed answers only: `choice`, `score`, `noul` - built for classify / route / score / rank. Not an OpenServ product; not mentioned in the SERV Hackathon brief. Distinct from `jevai.net` marketing site.
+- **Why relevant on paper**: a `choice` over `GO` / `WAIT` / `NO-GO` with calibrated probabilities matches the preflight verdict shape.
+- **Why we do not integrate now**:
+  1. CapitalRail already owns the outcome in code (`codeDecision` + safety override); SERV does judgment (risk, ranking, memo, veto). Letting Jev set or soft-replace GO/WAIT/NO-GO would fight "rules = code, judgment = SERV".
+  2. No `OPENJEV_API_KEY` in the project; unauthenticated calls return 401. A fake local "Jev-like" classifier would be dishonest.
+  3. Hackathon scoring needs meaningful **SERV Reasoning**, not a second vendor. Jev would not help that criterion and would add key / rate-limit / privacy surface.
+- **Closest alternative already in place**: deterministic rules filter for the class, SERV risk cross-check + disagreements, independent verifier that may veto a GO, never unlock one.
+- **If revisited later**: optional, key-gated advisory `choice` in the trace only (disagreement when Jev != code at high confidence); never unlock a GO; never invent answers without a live OpenJEV response.
+
+## 2026-09-23 (agent-facing surface vs Hatrey)
+
+- **Positioning**: CapitalRail is a preflight gatekeeper other agents call before allocating to IXS vaults - not a desk. Humans keep the guided UI; agents use REST first.
+- **Shipped**: home section `#agents` (nav Agents), static OpenAPI 3 at `public/openapi.yaml` documenting exactly `POST /api/preflight` and `POST /api/intent`, curl + OpenAI/Anthropic tool snippets, VerdictCard "Copy as API call" points at OpenAPI / `#agents`.
+- **MCP**: thin stdio server `mcp/server.ts` (`npm run mcp`) with tools `capitalrail_preflight` and `capitalrail_intent` that HTTP-call the Next API via `CAPITALRAIL_BASE_URL` (default production). Does not weaken rate limits or Origin checks.
+- **Honesty**: no API auth today; rate limited; browser cross-site Origin blocked. Documented in OpenAPI info + For agents section.

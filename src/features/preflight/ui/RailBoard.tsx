@@ -96,6 +96,14 @@ export function RailBoard({
                       : "KYC required"
                     : "open to all"}
                 </dd>
+                <dt className="text-slate-500">TVL</dt>
+                <dd className="m-0 break-all text-right text-slate-300">
+                  {rail.totalAssets ?? "-"}
+                </dd>
+                <dt className="text-slate-500">ttm</dt>
+                <dd className="m-0 text-right text-slate-300">
+                  {rail.ttm != null ? `${rail.ttm} (maturity)` : "-"}
+                </dd>
                 <dt className="text-slate-500">Price/share</dt>
                 <dd className="m-0 break-all text-right text-slate-300">
                   {rail.pricePerShare ?? "-"}
@@ -120,6 +128,8 @@ export function RailBoard({
                 "Chain",
                 "Withdrawals",
                 "Access",
+                "TVL",
+                "ttm",
                 "Price/share",
                 "Blocker",
               ].map((label) => (
@@ -171,6 +181,12 @@ export function RailBoard({
                         ? "KYC ok"
                         : "KYC required"
                       : "open to all"}
+                  </td>
+                  <td className="border-b border-emerald-200/10 px-2 py-2.5 align-top font-mono text-slate-300">
+                    {rail.totalAssets ?? "-"}
+                  </td>
+                  <td className="border-b border-emerald-200/10 px-2 py-2.5 align-top font-mono text-slate-300">
+                    {rail.ttm != null ? String(rail.ttm) : "-"}
                   </td>
                   <td className="border-b border-emerald-200/10 px-2 py-2.5 align-top font-mono text-slate-300">
                     {rail.pricePerShare ?? "-"}
