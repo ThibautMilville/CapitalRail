@@ -1,12 +1,20 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import {
+  useId,
+  useSyncExternalStore,
+  type CSSProperties,
+} from "react";
 import type { PreflightResponse } from "@/features/preflight/lib/types";
 import { chainLabel } from "@/shared/wallet/chains";
 
 type PipelineDiagramProps = {
   loading?: boolean;
   result?: PreflightResponse | null;
+  /** Softer shell when nested inside another bordered panel. */
+  embedded?: boolean;
+  /** Override the default "How this check ran" heading. */
+  title?: string;
 };
 
 type StageId = "intent" | "mandate" | "scan" | "decide" | "attest";
@@ -35,6 +43,16 @@ const EDGE_PAIRS: [StageId, StageId][] = [
   ["scan", "decide"],
   ["decide", "attest"],
 ];
+
+function subscribeReducedMotion(onChange: () => void) {
+  const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+}
+
+function readReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
 
 function center(rect: DiagramRect) {
   return { x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 };
@@ -76,10 +94,26 @@ function stageActive(
   return false;
 }
 
-export function PipelineDiagram({ loading, result }: PipelineDiagramProps) {
+export function PipelineDiagram({
+  loading,
+  result,
+  embedded = false,
+  title = "How this check ran",
+}: PipelineDiagramProps) {
+  const uid = useId().replace(/:/g, "");
+  const gradId = `cr-diagram-grad-${uid}`;
+  const glowId = `cr-diagram-glow-${uid}`;
+  const hubId = `cr-diagram-hub-${uid}`;
+  const reduceMotion = useSyncExternalStore(
+    subscribeReducedMotion,
+    readReducedMotion,
+    () => true,
+  );
+
   const isGo = result?.decision === "GO";
   const isBlockedDecision = Boolean(result && result.decision !== "GO");
   const flowBusy = Boolean(loading || result);
+  const showPulses = flowBusy && !reduceMotion;
 
   const openRails =
     result?.rails.filter((rail) => rail.status === "open") ?? [];
@@ -126,8 +160,11 @@ export function PipelineDiagram({ loading, result }: PipelineDiagramProps) {
 
   return (
     <section
-      id="pipeline-diagram"
-      className="cr-diagram-shell rounded-2xl border border-emerald-200/20 bg-[#06171e]/85 p-4 shadow-[0_18px_48px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:p-5"
+      className={
+        embedded
+          ? "cr-diagram-shell"
+          : "cr-diagram-shell rounded-2xl border border-emerald-200/20 bg-[#06171e]/85 p-4 shadow-[0_18px_48px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:p-5"
+      }
       aria-label="CapitalRail pipeline diagram"
     >
       <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
@@ -136,7 +173,7 @@ export function PipelineDiagram({ loading, result }: PipelineDiagramProps) {
             Pipeline
           </p>
           <h2 className="page-header-accent-text m-0 mt-1 text-lg font-semibold tracking-[-0.02em] normal-case sm:text-xl">
-            How this check ran
+            {title}
           </h2>
         </div>
         <span
@@ -169,7 +206,7 @@ export function PipelineDiagram({ loading, result }: PipelineDiagramProps) {
         >
           <defs>
             <linearGradient
-              id="cr-diagram-grad"
+              id={gradId}
               x1="0%"
               y1="0%"
               x2="100%"
@@ -179,7 +216,7 @@ export function PipelineDiagram({ loading, result }: PipelineDiagramProps) {
               <stop offset="100%" stopColor="#75d9e7" />
             </linearGradient>
             <filter
-              id="cr-diagram-glow"
+              id={glowId}
               x="-50%"
               y="-50%"
               width="200%"
@@ -191,7 +228,7 @@ export function PipelineDiagram({ loading, result }: PipelineDiagramProps) {
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-            <radialGradient id="cr-diagram-hub" cx="50%" cy="50%" r="50%">
+            <radialGradient id={hubId} cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="rgba(91,238,190,0.18)" />
               <stop offset="100%" stopColor="rgba(91,238,190,0)" />
             </radialGradient>
@@ -227,7 +264,7 @@ export function PipelineDiagram({ loading, result }: PipelineDiagramProps) {
             cx={decideC.x}
             cy={decideC.y}
             r="38"
-            fill="url(#cr-diagram-hub)"
+            fill={`url(#${hubId})`}
           />
 
           {/* Edges */}
@@ -252,11 +289,11 @@ export function PipelineDiagram({ loading, result }: PipelineDiagramProps) {
                   className="cr-diagram-arrow"
                   points={arrowHead(from.x, from.y, to.x, to.y)}
                 />
-                {flowBusy ? (
+                {showPulses ? (
                   <circle
                     className="cr-diagram-pulse"
                     r="3.2"
-                    filter="url(#cr-diagram-glow)"
+                    filter={`url(#${glowId})`}
                   >
                     <animateMotion
                       dur={loading ? "2.2s" : "3.6s"}
@@ -271,11 +308,11 @@ export function PipelineDiagram({ loading, result }: PipelineDiagramProps) {
           })}
 
           {/* Full-lane pulse */}
-          {flowBusy ? (
+          {showPulses ? (
             <circle
               className="cr-diagram-pulse cr-diagram-pulse-strong"
               r="4"
-              filter="url(#cr-diagram-glow)"
+              filter={`url(#${glowId})`}
             >
               <animateMotion
                 dur={loading ? "2.8s" : "4.4s"}
@@ -303,6 +340,11 @@ export function PipelineDiagram({ loading, result }: PipelineDiagramProps) {
                     active
                       ? "cr-diagram-node-box cr-diagram-node-box-active"
                       : "cr-diagram-node-box"
+                  }
+                  style={
+                    active
+                      ? ({ stroke: `url(#${gradId})` } as CSSProperties)
+                      : undefined
                   }
                   x={rect.x}
                   y={rect.y}
@@ -350,11 +392,11 @@ export function PipelineDiagram({ loading, result }: PipelineDiagramProps) {
             fill="none"
           />
 
-          {(loading || isGo) && (
+          {showPulses && (loading || isGo) && (
             <circle
               className="cr-diagram-pulse"
               r="3"
-              filter="url(#cr-diagram-glow)"
+              filter={`url(#${glowId})`}
             >
               <animateMotion
                 dur="3s"
@@ -363,7 +405,7 @@ export function PipelineDiagram({ loading, result }: PipelineDiagramProps) {
               />
             </circle>
           )}
-          {(loading || isBlockedDecision) && (
+          {showPulses && (loading || isBlockedDecision) && (
             <circle className="cr-diagram-pulse-bad" r="3">
               <animateMotion
                 dur="3.2s"

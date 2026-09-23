@@ -1,3 +1,5 @@
+import { PipelineDiagram } from "@/features/preflight/ui/PipelineDiagram";
+
 type Step = {
   title: string;
   body: string;
@@ -55,6 +57,14 @@ export function HowItWorksSection() {
         CapitalRail is a preflight: it answers &quot;can I actually enter this
         vault right now?&quot; before any capital moves.
       </p>
+
+      <div className="mt-5">
+        <PipelineDiagram
+          loading={false}
+          result={null}
+          title="Intent to attested deposit"
+        />
+      </div>
 
       <ol className="m-0 mt-5 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
         {STEPS.map((step, index) => (

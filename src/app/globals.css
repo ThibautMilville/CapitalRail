@@ -287,7 +287,7 @@ body {
 }
 
 .cr-diagram-node-box-active {
-  stroke: url(#cr-diagram-grad);
+  stroke: #5beebe;
   stroke-width: 1.7;
   fill: rgba(91, 238, 190, 0.1);
 }

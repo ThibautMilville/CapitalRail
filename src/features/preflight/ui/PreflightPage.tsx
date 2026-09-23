@@ -41,6 +41,7 @@ import { FlowStepper, type FlowStep } from "@/features/preflight/ui/FlowStepper"
 import { HowItWorksSection } from "@/features/preflight/ui/HowItWorksSection";
 import { IntentComposer } from "@/features/preflight/ui/IntentComposer";
 import { JudgeDemoBar } from "@/features/preflight/ui/JudgeDemoBar";
+import { PipelineDiagram } from "@/features/preflight/ui/PipelineDiagram";
 import { RoadmapRails } from "@/features/preflight/ui/RoadmapRails";
 import { SignPanel } from "@/features/preflight/ui/SignPanel";
 import { VerdictCard } from "@/features/preflight/ui/VerdictCard";
@@ -514,6 +515,14 @@ export function PreflightPage() {
                 vaultCount={health?.vaultCount}
                 servConfigured={health?.servConfigured}
               />
+              <div className="mt-5">
+                <PipelineDiagram
+                  loading
+                  result={null}
+                  embedded
+                  title="Live check in progress"
+                />
+              </div>
             </div>
           ) : null}
           {error ? (
@@ -532,6 +541,15 @@ export function PreflightPage() {
 
         {result && resultMandate ? (
           <>
+            <div id="pipeline-diagram" className="scroll-mt-24">
+              <PipelineDiagram
+                loading={loading}
+                result={result}
+                title={
+                  loading ? "Re-checking the live rails" : "How this check ran"
+                }
+              />
+            </div>
             <VerdictCard
               result={result}
               mandate={resultMandate}
