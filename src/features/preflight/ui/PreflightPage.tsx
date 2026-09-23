@@ -178,13 +178,14 @@ export function PreflightPage() {
   const lastRunKeyRef = useRef<string | null>(null);
   const runIdRef = useRef(0);
 
-  const { address, isConnected, chainId } = useAccount();
+  const { address, isConnected, chainId, status: accountStatus } = useAccount();
   const { connect, connectors, isPending: connecting, error: connectError } =
     useConnect();
   const { disconnect } = useDisconnect();
   const { switchChain } = useSwitchChain();
   const { notify } = useToast();
-  const wasConnectedRef = useRef(false);
+  /** null until wagmi status has settled once (skip reconnect hydration toast). */
+  const wasConnectedRef = useRef<boolean | null>(null);
   const [syncedAddress, setSyncedAddress] = useState<string | null>(null);
 
   if (isConnected && address && address !== syncedAddress) {
@@ -230,18 +231,31 @@ export function PreflightPage() {
   }, [refreshStats]);
 
   useEffect(() => {
-    if (isConnected && address) {
-      if (!wasConnectedRef.current) {
+    // Wait for reconnect/connect settlement so reload hydration is not a toast.
+    if (accountStatus === "reconnecting" || accountStatus === "connecting") {
+      return;
+    }
+
+    const connected = Boolean(isConnected && address);
+
+    if (wasConnectedRef.current === null) {
+      // First settled observation: record only (wagmi rehydrate / page load).
+      wasConnectedRef.current = connected;
+      return;
+    }
+
+    if (connected && address) {
+      if (wasConnectedRef.current === false) {
         notify(
           "success",
           `Wallet connected - ${address.slice(0, 6)}...${address.slice(-4)}`,
         );
       }
       wasConnectedRef.current = true;
-    } else if (!isConnected) {
+    } else {
       wasConnectedRef.current = false;
     }
-  }, [isConnected, address, notify]);
+  }, [accountStatus, isConnected, address, notify]);
 
   useEffect(() => {
     if (connectError) {
