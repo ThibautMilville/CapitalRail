@@ -83,17 +83,17 @@ export function IntentComposer({
 
       <form
         data-agent-avoid
-        className="flex flex-col gap-2 sm:flex-row sm:items-end"
+        className="flex flex-col gap-2"
         onSubmit={(event) => {
           event.preventDefault();
           void submit(input);
         }}
       >
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex w-full min-w-0 flex-col gap-1">
           <textarea
             id="intent-input"
             rows={3}
-            className="min-h-[4.5rem] min-w-0 resize-y rounded-xl border border-emerald-200/20 bg-black/30 px-3.5 py-2.5 text-[0.95rem] leading-snug text-[#f5fbfd] outline-none transition-[border-color] placeholder:text-slate-500 focus:border-emerald-200/45"
+            className="min-h-[4.5rem] w-full min-w-0 resize-none rounded-xl border border-emerald-200/20 bg-black/30 px-3.5 py-2.5 text-[0.95rem] leading-snug text-[#f5fbfd] outline-none transition-[border-color] placeholder:text-slate-500 focus:border-emerald-200/45"
             value={input}
             onChange={(event) => setInput(event.target.value)}
             onKeyDown={(event) => {
@@ -111,10 +111,12 @@ export function IntentComposer({
             Enter for a new line. Ctrl/Cmd+Enter or Check my entry to send.
           </p>
         </div>
-        <button type="submit" className={btnPrimary} disabled={busy}>
-          <IconSearch className="h-4 w-4 shrink-0" />
-          {parsing ? "Reading..." : loading ? "Checking..." : "Check my entry"}
-        </button>
+        <div className="flex justify-end">
+          <button type="submit" className={btnPrimary} disabled={busy}>
+            <IconSearch className="h-4 w-4 shrink-0" />
+            {parsing ? "Reading..." : loading ? "Checking..." : "Check my entry"}
+          </button>
+        </div>
       </form>
 
       {!hasResult ? (

@@ -91,3 +91,5 @@ Append-only journal of decisions and user feedback. Format: `YYYY-MM-DD - decisi
 - **IXS gaps unchanged**: `vault_request_status` flaky; `vault_build_claim_deposit` unused - not blocking.
 
 - **Business model stats layout (2026-09-23)**: "Failed deposits avoided" counter stacks under the section title at full width (`w-full`). Removed `md:flex-row` / `justify-between` that placed the card beside the title on desktop.
+
+- **IntentComposer layout (2026-09-23)**: textarea full width with `resize-none` (no native resize grip). "Check my entry" sits below in a `justify-end` row, not beside the field on `sm+`. Enter = newline, Ctrl/Cmd+Enter submit unchanged.
