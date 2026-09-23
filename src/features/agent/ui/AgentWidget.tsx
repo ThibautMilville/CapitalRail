@@ -71,7 +71,7 @@ const TEASER_DISMISSED_KEY = "cr-agent-teaser-dismissed";
 const AGENT_OPENED_KEY = "cr-agent-opened";
 
 const FOCUSABLE =
-  'button:not([disabled]), input:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
+  'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
 
 function readSession(key: string): string | null {
   try {
@@ -94,6 +94,11 @@ function teaserStopped(): boolean {
     readSession(AGENT_OPENED_KEY) === "1" ||
     Number(readSession(TEASER_DISMISSED_KEY) ?? "0") >= TEASER_MAX_DISMISSALS
   );
+}
+
+/** True only after intro overlay is fully gone (not merely cr-intro-done). */
+function introChromeReady(): boolean {
+  return document.documentElement.classList.contains("cr-intro-chrome-ready");
 }
 
 const MOBILE_MAX_WIDTH = 639;
@@ -171,7 +176,7 @@ export function AgentWidget({
   const panelRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const avoidInViewRef = useRef(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const contextRef = useRef(context);
   const teaserIndexRef = useRef(0);
   const teaserTimersRef = useRef<number[]>([]);
@@ -200,7 +205,7 @@ export function AgentWidget({
 
     const runCycle = () => {
       if (teaserStopped() || document.visibilityState !== "visible") return;
-      if (!document.documentElement.classList.contains("cr-intro-done")) return;
+      if (!introChromeReady()) return;
       if (avoidInViewRef.current) return;
       const texts = TEASERS[phaseOf(contextRef.current)];
       const text = texts[teaserIndexRef.current % texts.length];
@@ -216,14 +221,38 @@ export function AgentWidget({
       );
     };
 
+    let cancelled = false;
+    let first: number | undefined;
     let interval: number | undefined;
-    const first = window.setTimeout(() => {
-      runCycle();
-      interval = window.setInterval(runCycle, TEASER_INTERVAL_MS);
-    }, TEASER_FIRST_DELAY_MS);
+    let observer: MutationObserver | undefined;
+
+    const startCycles = () => {
+      if (cancelled || first != null) return;
+      first = window.setTimeout(() => {
+        runCycle();
+        interval = window.setInterval(runCycle, TEASER_INTERVAL_MS);
+      }, TEASER_FIRST_DELAY_MS);
+    };
+
+    if (introChromeReady()) {
+      startCycles();
+    } else {
+      observer = new MutationObserver(() => {
+        if (!introChromeReady()) return;
+        observer?.disconnect();
+        observer = undefined;
+        startCycles();
+      });
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["class"],
+      });
+    }
 
     return () => {
-      window.clearTimeout(first);
+      cancelled = true;
+      observer?.disconnect();
+      if (first != null) window.clearTimeout(first);
       if (interval) window.clearInterval(interval);
       clearTeaserTimers();
     };
@@ -439,7 +468,7 @@ export function AgentWidget({
     : "Tell me what you want to deposit, in your own words, and I check the live IXS vaults for you. You can also ask me how CapitalRail works, about KYC or supported chains.";
 
   return (
-    <>
+    <div className="cr-agent-root">
       <div
         className={`cr-agent-backdrop ${open ? "is-open" : ""}`}
         onClick={closePanel}
@@ -579,29 +608,41 @@ export function AgentWidget({
             ))}
           </div>
           <form
-            className="flex gap-2"
+            className="flex flex-col gap-1.5"
             onSubmit={(event) => {
               event.preventDefault();
               void ask(input);
             }}
           >
-            <input
-              ref={inputRef}
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              maxLength={500}
-              placeholder={context ? "Ask about the decision..." : "e.g. 100 USDC on BSC, or a question"}
-              aria-label={context ? "Question about the decision" : "What do you want to deposit?"}
-              className="min-h-10 min-w-0 flex-1 rounded-xl border border-emerald-200/15 bg-black/25 px-3 py-2 text-sm text-[#f5fbfd] outline-none transition-[border-color] placeholder:text-slate-600 focus:border-emerald-200/35"
-            />
-            <button
-              type="submit"
-              disabled={pending || !input.trim()}
-              className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-emerald-200/30 bg-emerald-200/[0.12] px-3.5 text-[0.8rem] font-medium text-emerald-100 transition-[filter,opacity] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <IconSend className="h-3.5 w-3.5 shrink-0" />
-              {context ? "Ask" : "Send"}
-            </button>
+            <div className="flex items-end gap-2">
+              <textarea
+                ref={inputRef}
+                rows={2}
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+                    event.preventDefault();
+                    if (!pending && input.trim()) void ask(input);
+                  }
+                }}
+                maxLength={500}
+                placeholder={context ? "Ask about the decision..." : "e.g. 100 USDC on BSC, or a question"}
+                aria-label={context ? "Question about the decision" : "What do you want to deposit?"}
+                className="min-h-10 min-w-0 flex-1 resize-none rounded-xl border border-emerald-200/15 bg-black/25 px-3 py-2 text-sm leading-snug text-[#f5fbfd] outline-none transition-[border-color] placeholder:text-slate-600 focus:border-emerald-200/35"
+              />
+              <button
+                type="submit"
+                disabled={pending || !input.trim()}
+                className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-emerald-200/30 bg-emerald-200/[0.12] px-3.5 text-[0.8rem] font-medium text-emerald-100 transition-[filter,opacity] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <IconSend className="h-3.5 w-3.5 shrink-0" />
+                {context ? "Ask" : "Send"}
+              </button>
+            </div>
+            <p className="m-0 text-[0.68rem] text-slate-500">
+              Enter for a new line. Ctrl/Cmd+Enter to send.
+            </p>
           </form>
         </div>
       </div>
@@ -650,6 +691,6 @@ export function AgentWidget({
         </span>
         {context && !open ? <span className="cr-agent-launcher-dot" aria-hidden /> : null}
       </button>
-    </>
+    </div>
   );
 }

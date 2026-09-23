@@ -83,22 +83,34 @@ export function IntentComposer({
 
       <form
         data-agent-avoid
-        className="flex flex-col gap-2 sm:flex-row sm:items-stretch"
+        className="flex flex-col gap-2 sm:flex-row sm:items-end"
         onSubmit={(event) => {
           event.preventDefault();
           void submit(input);
         }}
       >
-        <input
-          id="intent-input"
-          className="min-h-12 min-w-0 flex-1 rounded-xl border border-emerald-200/20 bg-black/30 px-3.5 py-2.5 text-[0.95rem] text-[#f5fbfd] outline-none transition-[border-color] placeholder:text-slate-500 focus:border-emerald-200/45"
-          value={input}
-          onChange={(event) => setInput(event.target.value)}
-          maxLength={500}
-          placeholder="e.g. 500 USDC, no KYC, instant withdrawals"
-          disabled={busy}
-          aria-label="What do you want to deposit?"
-        />
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <textarea
+            id="intent-input"
+            rows={3}
+            className="min-h-[4.5rem] min-w-0 resize-y rounded-xl border border-emerald-200/20 bg-black/30 px-3.5 py-2.5 text-[0.95rem] leading-snug text-[#f5fbfd] outline-none transition-[border-color] placeholder:text-slate-500 focus:border-emerald-200/45"
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+                event.preventDefault();
+                if (!busy) void submit(input);
+              }
+            }}
+            maxLength={500}
+            placeholder="e.g. 500 USDC, no KYC, instant withdrawals"
+            disabled={busy}
+            aria-label="What do you want to deposit?"
+          />
+          <p className="m-0 text-[0.72rem] text-slate-500">
+            Enter for a new line. Ctrl/Cmd+Enter or Check my entry to send.
+          </p>
+        </div>
         <button type="submit" className={btnPrimary} disabled={busy}>
           <IconSearch className="h-4 w-4 shrink-0" />
           {parsing ? "Reading..." : loading ? "Checking..." : "Check my entry"}
