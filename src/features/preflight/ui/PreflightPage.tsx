@@ -466,7 +466,7 @@ export function PreflightPage() {
               <BrandGlowTitle lead="Capital" accent="Rail" />
             </h1>
           </div>
-          <p className="mt-3 max-w-3xl text-[0.95rem] leading-snug text-slate-400 sm:text-[1.02rem]">
+          <p className="mt-3 w-full max-w-none text-[0.95rem] leading-snug text-slate-400 sm:text-[1.02rem]">
             Check if you can really enter an IXS vault before you sign
             anything. GO only when deposit capacity is real.{" "}
             <a

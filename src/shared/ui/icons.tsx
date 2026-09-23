@@ -160,6 +160,68 @@ export function IconRefresh({ className = "h-4 w-4", ...props }: IconProps) {
   );
 }
 
+/** Horizontal swap arrows - network / chain switch. */
+export function IconSwitchNetwork({ className = "h-4 w-4", ...props }: IconProps) {
+  return (
+    <svg {...base} className={className} {...props}>
+      <path
+        d="M2.5 5.5 H12.5"
+        stroke="currentColor"
+        strokeWidth="1.35"
+        strokeLinecap="round"
+      />
+      <path
+        d="M10 3 L12.5 5.5 L10 8"
+        stroke="currentColor"
+        strokeWidth="1.35"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M13.5 10.5 H3.5"
+        stroke="currentColor"
+        strokeWidth="1.35"
+        strokeLinecap="round"
+      />
+      <path
+        d="M6 8 L3.5 10.5 L6 13"
+        stroke="currentColor"
+        strokeWidth="1.35"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Logout / disconnect - door with exit arrow. */
+export function IconDisconnect({ className = "h-4 w-4", ...props }: IconProps) {
+  return (
+    <svg {...base} className={className} {...props}>
+      <path
+        d="M6.5 2.75 H4 A1.25 1.25 0 0 0 2.75 4 V12 A1.25 1.25 0 0 0 4 13.25 H6.5"
+        stroke="currentColor"
+        strokeWidth="1.35"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M7 8 H13.25"
+        stroke="currentColor"
+        strokeWidth="1.35"
+        strokeLinecap="round"
+      />
+      <path
+        d="M10.75 5.5 L13.25 8 L10.75 10.5"
+        stroke="currentColor"
+        strokeWidth="1.35"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function IconSpark({ className = "h-4 w-4", ...props }: IconProps) {
   return (
     <svg {...base} className={className} {...props}>

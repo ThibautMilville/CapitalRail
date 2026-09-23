@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CapitalRailMark } from "@/shared/ui/CapitalRailMark";
-import { IconWallet } from "@/shared/ui/icons";
+import { IconDisconnect, IconSwitchNetwork, IconWallet } from "@/shared/ui/icons";
 
 export type SiteHeaderLink = {
   href: string;
@@ -37,7 +37,7 @@ const statusDot: Record<SiteHeaderStatus["tone"], string> = {
 };
 
 const menuItem =
-  "flex min-h-10 w-full cursor-pointer items-center rounded-lg px-3 text-left text-[0.84rem] text-slate-200 transition-colors hover:bg-white/5 hover:text-white";
+  "flex min-h-10 w-full cursor-pointer items-center gap-2 rounded-lg px-3 text-left text-[0.84rem] text-slate-200 transition-colors hover:bg-white/5 hover:text-white";
 
 function useOutsideClose(open: boolean, close: () => void) {
   const ref = useRef<HTMLDivElement>(null);
@@ -184,6 +184,7 @@ export function SiteHeader({
                       onSwitchNetwork();
                     }}
                   >
+                    <IconSwitchNetwork className="h-3.5 w-3.5 shrink-0" />
                     Switch to BSC
                   </button>
                 ) : null}
@@ -196,6 +197,7 @@ export function SiteHeader({
                     onDisconnect();
                   }}
                 >
+                  <IconDisconnect className="h-3.5 w-3.5 shrink-0" />
                   Disconnect
                 </button>
               </div>
