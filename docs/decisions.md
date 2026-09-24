@@ -148,3 +148,9 @@ Append-only journal of decisions and user feedback. Format: `YYYY-MM-DD - decisi
 
 - Screenshots under `docs/screenshots/` embedded in README; X map in `docs/x-thread-hackathon.md`.
 - Prod verify after deploy `bcb5420`: BSC 500 USDC delayed/no KYC can be verifier **NO-GO** with aligned memo (`Final decision: NO-GO`, no proceed/sign); Avalanche WAIT and hard NO-GO also aligned; `txPack` absent when not GO. Local fallback still shows GO for the same prefs (screenshot `go-result.png`).
+
+## 2026-09-24 (README slimmed - no X fluff)
+
+- README trimmed to judges/builders essentials: product + links, architecture, IXS sources, SERV place, guardrails, concise GO/WAIT/NO-GO with screenshot embeds, agents/API/getting started/safety.
+- Removed: Pitch / Jury path duplicates, Key features, Business model, Screenshots tweet-number mapping table, X attach notes. Tweet/image map stays only in `docs/x-thread-hackathon.md`.
+- `docs/demo-scenarios.md` kept as detailed repro (tables + curls); dropped duplicate pitch/jury-path paragraphs.

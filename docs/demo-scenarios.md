@@ -5,17 +5,7 @@ Repo: https://github.com/ThibautMilville/CapitalRail
 
 Use the home guided flow (free text → editable rules → Check my entry) or `POST /api/preflight` with the demo wallet `0x0000000000000000000000000000000000000001` (preview: public rails only, never a tx pack).
 
-## Pitch (one line)
-
-An agent sees an open vault and tries to deposit. CapitalRail checks actual capacity, access, and settlement. When MCP deposit limit is 0 (often NAV stale on Avalanche HYB), it returns **WAIT** and refuses unsafe entry.
-
-## Jury path (~2 min)
-
-1. Free text intent (examples below).
-2. Confirm / edit rules pills (amount, chain, KYC, withdrawals).
-3. Wait for progress UI (scan → rules → SERV risk → ranking → verification → decision).
-4. Read GO / WAIT / NO-GO + compact "For the jury" SERV summary.
-5. Open Details → SERV trace / Memo & proof. Unsigned txs appear **only** if decision is GO and a real wallet was checked.
+Product overview and architecture: [README](../README.md).
 
 ## GO
 
@@ -91,4 +81,4 @@ Run the **GO** prompt. If the independent verifier returns a hard `fail`, Capita
 | WAIT | Final decision WAIT | Re-check / other chain | Absent | Hidden |
 | NO-GO | Final decision NO-GO | Loosen rules / do not sign | Absent | Hidden |
 
-Screenshots: `docs/screenshots/` (see README).
+Screenshots: `docs/screenshots/` (embedded in README).

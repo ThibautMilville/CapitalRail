@@ -29,4 +29,4 @@ Living documentation for the CapitalRail hackathon entry (SERV Hackathon Edition
 | File | Content |
 |---|---|
 | [demo-scenarios.md](./demo-scenarios.md) | Exact prompts/prefs to reproduce GO / WAIT / NO-GO on prod |
-| [screenshots/](./screenshots/) | Jury/X images referenced from README |
+| [screenshots/](./screenshots/) | Demo state images embedded in README |

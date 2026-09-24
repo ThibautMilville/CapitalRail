@@ -4,24 +4,14 @@ IXS entry preflight for the **SERV Hackathon Edition 01** (RWA Vaults track, par
 
 Before any capital moves, CapitalRail checks the live IXS vaults (capacity, whitelist / KYC, withdrawal mode, balance) and answers **GO / WAIT / NO-GO** with reasons and fact-grounded risk notes. Only on GO, and only for your connected wallet, it prepares **unsigned** approve + deposit transactions that you sign yourself.
 
+Rules are code; judgment is SERV; the verifier may veto a GO, never unlock one. When MCP deposit limit is `0` (often NAV staleness on Avalanche HYB - not permanently closed), CapitalRail returns **WAIT** and refuses unsafe entry.
+
 | | |
 | --- | --- |
 | Live | https://capitalrail.ozc.fr |
 | Repo | https://github.com/ThibautMilville/CapitalRail |
 | License | MIT |
 | Demo scenarios | [docs/demo-scenarios.md](./docs/demo-scenarios.md) |
-
-## Pitch
-
-An agent sees an open vault and tries to deposit. CapitalRail checks **actual** capacity, access, and settlement on live IXS rails. When MCP deposit limit is `0` (often NAV staleness on Avalanche HYB - not permanently closed), it returns **WAIT** and refuses unsafe entry. Rules are code; judgment is SERV; the verifier may veto a GO, never unlock one.
-
-## Jury demo path (~2 min)
-
-1. Free text intent on the home page (examples below).
-2. Confirm or edit rules (amount, chain, KYC, withdrawals).
-3. Watch progress: scan rails → rules → SERV risk → ranking → verification → decision.
-4. Read the decision + compact "For the jury" SERV summary.
-5. Open Details for evidence / full trace / memo. **Unsigned txs only if GO.**
 
 ![Landing / preflight start](./docs/screenshots/landing-hero.png)
 
@@ -77,7 +67,7 @@ Without `SERV_API_KEY`, each SERV step uses a deterministic fallback with the sa
 
 ## Reproduce GO / WAIT / NO-GO
 
-Full prefs and curls: [docs/demo-scenarios.md](./docs/demo-scenarios.md).
+Exact prefs and curls: [docs/demo-scenarios.md](./docs/demo-scenarios.md).
 
 ### GO (BSC, delayed ok)
 
@@ -86,7 +76,7 @@ Prefs: amount `500`, chain BSC (`56`), KYC off, sync off.
 
 ![GO result](./docs/screenshots/go-result.png)
 
-Expect: `decision=GO` when the open BSC rail builds. Memo may recommend BSC. Tx pack only with a real wallet.
+Expect: `decision=GO` when the open BSC rail builds. Unsigned txs only with a real wallet.
 
 ### WAIT (Avalanche, deposit limit 0)
 
@@ -107,28 +97,6 @@ Or: GO path + live verifier hard fail → veto → memo rewritten to `Final deci
 ### Vaults catalogue
 
 ![Vaults loaded](./docs/screenshots/vaults-loaded.png)
-
-## Screenshots (X / jury)
-
-All files under [`docs/screenshots/`](./docs/screenshots/) (ASCII names). Tweet mapping: [docs/x-thread-hackathon.md](./docs/x-thread-hackathon.md).
-
-| File | Use |
-| --- | --- |
-| `landing-hero.png` | Tweet 1/7 - product hero / start of flow |
-| `progress-analyzing.png` | Tweet 2/7 - not frozen, pipeline progress |
-| `wait-avalanche.png` | Tweet 3/7 - limit 0 → WAIT |
-| `go-result.png` | Tweet 4/7 or 6/7 - GO + jury SERV summary |
-| `nogo-veto.png` | Tweet 4/7 - verifier / hard NO-GO consistency |
-| `vaults-loaded.png` | Tweet 5/7 - live IXS catalogue |
-
-## Key features
-
-- Live IXS vault scan (capacity, KYC / whitelist, settlement, balance)
-- Authoritative code rules + SERV risk, ranking, memo, verifier
-- Progress UI during the ~15-35 s preflight
-- Compact jury SERV summary on the result (not raw 17KB JSON)
-- Unsigned tx pack only on GO for the connected wallet
-- Decision agent + OpenAPI + thin MCP for other agents
 
 ## For agents
 
@@ -169,15 +137,6 @@ curl -s -X POST "$BASE_URL/api/intent" \
 ```
 
 Placeholder wallet `0x...0001` → `preview: true`, no tx pack.
-
-## Business model
-
-1. Preflight API for agents and wallets (free tier, then pay-per-check).
-2. White-label "Can I enter?" widget + blocked-demand dashboard for RWA issuers.
-3. Capacity alerts when a WAIT vault reopens.
-4. Referral on validated deposits (subject to IXS agreement).
-
-Honest instance counter: failed deposits avoided (WAIT + NO-GO) on `GET /api/stats` / health.
 
 ## Getting started
 
