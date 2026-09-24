@@ -12,6 +12,7 @@ Living documentation for the CapitalRail hackathon entry (SERV Hackathon Edition
 | [brainstorm.md](./brainstorm.md) | Ideas log with status |
 | [decisions.md](./decisions.md) | Dated decision journal and user feedback |
 | [expectations.md](./expectations.md) | Quality bar checklist and open questions |
+| [x-thread-hackathon.md](./x-thread-hackathon.md) | Ready-to-post X thread for SERV Hackathon Edition 01 |
 
 ## How to maintain
 

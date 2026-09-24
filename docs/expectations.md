@@ -15,3 +15,7 @@
 - SERV API key: pending. Until set, the app runs in deterministic fallback.
 - Demo video (~2 min): script and recording not done yet.
 - Deployment target for the live URL: not decided.
+
+## Journal
+
+- 2026-09-24: X (Twitter) contest thread drafted in English and saved at `docs/x-thread-hackathon.md` (SERV Hackathon Edition 01, live + GitHub links, no OpenJEV live claim).

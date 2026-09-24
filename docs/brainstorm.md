@@ -35,3 +35,4 @@ Ideas log. Status: `done`, `in progress`, `idea`, `rejected`. Append new ideas a
 | 2026-09-23 | Agent-facing REST + OpenAPI + thin MCP | done | Section `#agents`, `public/openapi.yaml` (preflight + intent only), curl/tool snippets, `mcp/server.ts` via `npm run mcp` |
 | 2026-09-24 | OpenJEV for fast intent only (not GO class) | done | Reversal of full rejection for intent path; still never owns GO/WAIT/NO-GO |
 | 2026-09-24 | Cheaper model tiers (fast/small/large) | done | Ranking default off large onto mini; OpenJEV optional for intent |
+| 2026-09-24 | X contest thread for SERV Hackathon | done | English 7-tweet thread in `docs/x-thread-hackathon.md`; jury CTA + live/GitHub |
