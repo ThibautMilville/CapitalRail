@@ -139,18 +139,31 @@ function buildNonGoNextSteps(
     .slice(0, 2);
 
   if (decision === "WAIT") {
-    return [
+    return uniqueSteps([
       "Re-check later: MCP limit 0 may clear after NAV refresh - do not force a deposit.",
       "Try another chain (e.g. BSC) if you do not want to wait.",
       ...safePrior,
-    ].slice(0, 4);
+    ]);
   }
 
-  return [
+  return uniqueSteps([
     "Loosen one rule (chain, KYC or instant withdrawals) and re-check.",
     "Do not prepare or sign a deposit while the decision is NO-GO.",
     ...safePrior,
-  ].slice(0, 4);
+  ]);
+}
+
+function uniqueSteps(steps: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const step of steps) {
+    const key = step.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(step);
+    if (out.length >= 4) break;
+  }
+  return out;
 }
 
 /** True when memo or steps still invite a deposit despite a non-GO decision. */
