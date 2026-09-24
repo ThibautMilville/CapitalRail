@@ -52,7 +52,7 @@ A `User-Agent` header is required on IXS calls. Settlement for async HYB: daily 
 | Rules filter | **Code** (authoritative) | Chain, KYC, settlement, capacity → outcome class GO / WAIT / NO-GO |
 | Risk notes | **SERV** | Fact-grounded risks + independent eligibility cross-check |
 | Ranking + memo | **SERV** | Rank eligible rails, write memo and next steps |
-| Verifier | **SERV** | Pass / warn / fail; **hard fail vetoes a GO, never unlocks one** |
+| Verifier | **SERV** | Pass / warn / fail; soft fails warn; **code-confirmed hard fail vetoes a GO, never unlocks one** |
 | Safety override | **Code** | Last word on GO; rewrite memo/steps if decision is not GO |
 
 Without `SERV_API_KEY`, each SERV step uses a deterministic fallback with the same shape (app stays usable). Trace shows source per step (code / SERV / fallback).
@@ -71,12 +71,12 @@ Exact prefs and curls: [docs/demo-scenarios.md](./docs/demo-scenarios.md).
 
 ### GO (BSC, delayed ok)
 
-Free text: `500 USDC on BSC, no KYC, delayed withdrawals ok`  
-Prefs: amount `500`, chain BSC (`56`), KYC off, sync off.
+**Disconnect any wallet** (preview `0x…0001`). Free text: `100 USDC on BSC, no KYC, delayed withdrawals ok`  
+Prefs: amount `100`, chain BSC (`56`), KYC off, sync off. A connected underfunded wallet is honest NO-GO.
 
 ![GO result](./docs/screenshots/go-result.png)
 
-Expect: `decision=GO` when the open BSC rail builds. Unsigned txs only with a real wallet.
+Expect: `decision=GO` when the open BSC rail builds. Soft SERV verifier notes warn only; hard veto needs a code-invalid rail. Unsigned txs only with a real funded wallet.
 
 ### WAIT (Avalanche, deposit limit 0)
 
@@ -123,7 +123,7 @@ curl -s -X POST "$BASE_URL/api/preflight" \
   -H 'Content-Type: application/json' \
   -d '{
     "walletAddress": "0x0000000000000000000000000000000000000001",
-    "amount": "500",
+    "amount": "100",
     "preferences": {
       "allowKyc": false,
       "requireSyncSettlement": false,
@@ -133,7 +133,7 @@ curl -s -X POST "$BASE_URL/api/preflight" \
 
 curl -s -X POST "$BASE_URL/api/intent" \
   -H 'Content-Type: application/json' \
-  -d '{ "message": "500 USDC on BSC, no KYC, delayed withdrawals ok" }'
+  -d '{ "message": "100 USDC on BSC, no KYC, delayed withdrawals ok" }'
 ```
 
 Placeholder wallet `0x...0001` → `preview: true`, no tx pack.

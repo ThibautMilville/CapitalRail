@@ -222,6 +222,82 @@ describe("safety override and verifier", () => {
     });
     assert.equal(hard.verdict, "fail");
   });
+
+  it("does not let soft fact_mismatch veto a code-valid GO", () => {
+    const soft = normalizeVerification(
+      {
+        verdict: "fail",
+        issues: [
+          {
+            vaultId: "bsc-open",
+            kind: "fact_mismatch",
+            issue: "Memo omits Avalanche min deposit on a BSC rail.",
+          },
+        ],
+      },
+      {
+        decision: "GO",
+        selectedVaultId: "bsc-open",
+        input: input({ preferredChainId: 56 }),
+      },
+    );
+    assert.equal(soft.verdict, "warn");
+  });
+
+  it("keeps a fail when code confirms the selected GO rail is invalid", () => {
+    const hard = normalizeVerification(
+      {
+        verdict: "fail",
+        issues: [
+          {
+            vaultId: "avax-open",
+            kind: "rule_violation",
+            issue: "Selected rail is not open/buildable.",
+          },
+        ],
+      },
+      {
+        decision: "GO",
+        selectedVaultId: "avax-open",
+        input: input({ preferredChainId: 43114 }),
+      },
+    );
+    assert.equal(hard.verdict, "fail");
+  });
+
+  it("drops missed_option claims on rails blocked by insufficient balance", () => {
+    const rails = [
+      rail({
+        vaultId: "bsc-open",
+        walletAssetBalance: "0 USDC",
+        reasonCodes: ["INSUFFICIENT_BALANCE"],
+      }),
+    ];
+    const cleaned = normalizeVerification(
+      {
+        verdict: "fail",
+        issues: [
+          {
+            vaultId: "bsc-open",
+            kind: "missed_option",
+            issue: "NO-GO while BSC rail is open and buildable under the mandate.",
+          },
+          {
+            vaultId: "bsc-open",
+            kind: "rule_violation",
+            issue: "The proposal states no rails are eligible, but vault is open and buildable.",
+          },
+        ],
+      },
+      {
+        decision: "NO-GO",
+        selectedVaultId: null,
+        input: input({}, rails, "100"),
+      },
+    );
+    assert.equal(cleaned.verdict, "pass");
+    assert.deepEqual(cleaned.issues, []);
+  });
 });
 
 describe("fact-grounded risk notes", () => {

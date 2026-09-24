@@ -475,15 +475,95 @@ export function fallbackVerification(
   return { verdict: issues.length === 0 ? "pass" : "fail", issues };
 }
 
-/** A "fail" only vetoes when it cites a hard fact or rule; otherwise it is a warning. */
+export type NormalizeVerificationContext = {
+  decision: Decision;
+  selectedVaultId: string | null;
+  input: DecidePreflightInput;
+};
+
+function railEligibleByCode(
+  rail: RailSnapshot,
+  preferences: MandatePreferences,
+): boolean {
+  return !mandateViolation(rail, preferences) && !capacityBlock(rail);
+}
+
+/**
+ * Soft SERV "fail" issues must not veto a code-valid GO.
+ * Keep fail only when code confirms the selected rail is invalid, or when a
+ * missed_option correctly points at a rail that code would mark eligible.
+ */
 export function normalizeVerification(
   output: VerificationOutput,
+  ctx?: NormalizeVerificationContext,
 ): VerificationOutput {
-  if (output.verdict !== "fail") return output;
-  const hard = output.issues.some(
-    (issue) => issue.kind === "fact_mismatch" || issue.kind === "rule_violation",
+  if (output.verdict === "pass") return output;
+
+  let issues = output.issues;
+
+  if (ctx) {
+    issues = issues.filter((issue) => {
+      if (issue.kind === "missed_option") {
+        const rail = issue.vaultId
+          ? ctx.input.rails.find((item) => item.vaultId === issue.vaultId)
+          : undefined;
+        return rail
+          ? railEligibleByCode(rail, ctx.input.preferences)
+          : false;
+      }
+      if (
+        issue.kind === "rule_violation" &&
+        /open and buildable|are eligible|is eligible|usable under/i.test(
+          issue.issue,
+        )
+      ) {
+        const rail = issue.vaultId
+          ? ctx.input.rails.find((item) => item.vaultId === issue.vaultId)
+          : undefined;
+        return rail
+          ? railEligibleByCode(rail, ctx.input.preferences)
+          : false;
+      }
+      return true;
+    });
+  }
+
+  if (issues.length === 0) {
+    return { verdict: "pass", issues: [] };
+  }
+
+  if (output.verdict !== "fail") {
+    return { ...output, issues };
+  }
+
+  const softOnly = issues.every(
+    (issue) => issue.kind === "risk_understated" || issue.kind === "other",
   );
-  return hard ? output : { ...output, verdict: "warn" };
+  if (softOnly) {
+    return { verdict: "warn", issues };
+  }
+
+  if (ctx?.decision === "GO") {
+    const codeCheck = fallbackVerification(
+      ctx.input,
+      ctx.decision,
+      ctx.selectedVaultId,
+    );
+    if (codeCheck.verdict !== "fail") {
+      // Pedantic fact_mismatch on a code-valid GO becomes a warning, not a veto.
+      return { verdict: "warn", issues };
+    }
+  }
+
+  const hard = issues.some(
+    (issue) =>
+      issue.kind === "fact_mismatch" ||
+      issue.kind === "rule_violation" ||
+      issue.kind === "missed_option",
+  );
+  return hard
+    ? { ...output, issues }
+    : { verdict: "warn", issues };
 }
 
 /* Code-level guard: the last word always belongs to deterministic checks. */
@@ -751,7 +831,11 @@ export async function decidePreflight(
     fallback: () =>
       fallbackVerification(input, outcome, proposal.selectedVaultId),
   });
-  const verification = normalizeVerification(verificationStep.output);
+  const verification = normalizeVerification(verificationStep.output, {
+    decision: outcome,
+    selectedVaultId: proposal.selectedVaultId,
+    input,
+  });
   steps.push({
     ...verificationStep.trace,
     output: verification,

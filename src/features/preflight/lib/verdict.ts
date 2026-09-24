@@ -127,7 +127,10 @@ export function buildVerdict(
   const lowBalance = result.rails.find((rail) =>
     rail.reasonCodes.includes("INSUFFICIENT_BALANCE"),
   );
-  const balanceAmount = lowBalance ? floorAmount(lowBalance.walletAssetBalance) : null;
+  const balanceShortfall = Boolean(lowBalance);
+  const balanceAmount = lowBalance
+    ? floorAmount(lowBalance.walletAssetBalance)
+    : null;
   if (balanceAmount) {
     actions.push({
       kind: "patch",
@@ -204,18 +207,24 @@ export function buildVerdict(
       (item) => item.step === "verification" && /veto/i.test(item.resolution),
     );
 
+  const openCapacity = result.rails.some((rail) => isOpen(rail));
+
   return {
     tone: "nogo",
-    headline: balanceAmount
+    headline: balanceShortfall
       ? "Not enough USDC."
       : vetoed
         ? "Verifier blocked this entry."
         : "No vault fits your rules.",
-    summary: balanceAmount
-      ? "The vault is open, but your wallet holds less than the amount you asked for."
+    summary: balanceShortfall
+      ? balanceAmount
+        ? "The vault is open, but your wallet holds less than the amount you asked for. Lower the amount, fund the wallet, or disconnect to run the public preview."
+        : "The vault is open, but this wallet holds 0 USDC for the ticket size. Fund it, lower the amount, or disconnect to use the public preview (demo address)."
       : vetoed
         ? "Rules found a candidate, but the independent verifier vetoed GO. Nothing was prepared for signing."
-        : "Nothing was prepared. Loosen one rule below and we re-check instantly.",
+        : openCapacity && codes.has("WHITELIST_REQUIRED")
+          ? "Capacity exists, but whitelist / KYC is not cleared for this wallet. Allowing KYC vaults still needs onboarding - it does not unlock GO by itself. Try the permissionless BSC rail, or disconnect for the public preview."
+          : "Nothing was prepared. Loosen one rule below and we re-check instantly.",
     reasons: reasons.slice(0, 3),
     actions,
   };

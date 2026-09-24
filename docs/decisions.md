@@ -154,3 +154,14 @@ Append-only journal of decisions and user feedback. Format: `YYYY-MM-DD - decisi
 - README trimmed to judges/builders essentials: product + links, architecture, IXS sources, SERV place, guardrails, concise GO/WAIT/NO-GO with screenshot embeds, agents/API/getting started/safety.
 - Removed: Pitch / Jury path duplicates, Key features, Business model, Screenshots tweet-number mapping table, X attach notes. Tweet/image map stays only in `docs/x-thread-hackathon.md`.
 - `docs/demo-scenarios.md` kept as detailed repro (tables + curls); dropped duplicate pitch/jury-path paragraphs.
+
+## 2026-09-24 (demo GO prompt = 100 USDC)
+
+- Live prod check: documented BSC `500` delayed/no KYC is often SERV verifier **NO-GO** (0/3 in a battery). BSC `100` same prefs is the reliable GO path (3/3 + fresh verify; vault `6a26624ca7d16b245d665475`; preview = no tx pack; memo/steps aligned). Avalanche `100` delayed stays WAIT. Updated `docs/demo-scenarios.md` + README GO example accordingly (no code change).
+
+## 2026-09-24 (GO demo path - soft verifier veto + wallet trap)
+
+- **Prod diagnosis**: open BSC rail `6a26624ca7d16b245d665475` still `depositBuildOk` / permissionless. Preview `0x…0001` is code GO; live SERV often tagged soft `fact_mismatch` (concentration wording, Avalanche `minDepositUsdc` mis-applied to BSC) and vetoed GO → NO-GO. Connected wallets with 0 / low USDC are honest code NO-GO (`INSUFFICIENT_BALANCE`) with UI "No vault fits" when balance floors to 0 - matches the jury paste failure.
+- **Fix**: `normalizeVerification` now drops false "open and buildable / eligible" issues when code marks the rail ineligible (balance / whitelist), and downgrades SERV fail to **warn** unless `fallbackVerification` also fails on the selected GO rail. Verification prompt clarifies hard-fail only + Avalanche-only min deposit.
+- **Copy**: underfunded NO-GO always headlines "Not enough USDC"; suggests disconnect for public preview; Allow KYC does not unlock GO without whitelist.
+- **Docs**: `docs/demo-scenarios.md` + README GO path = disconnect wallet + paste `100 USDC on BSC, no KYC, delayed withdrawals ok`.
