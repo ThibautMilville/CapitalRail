@@ -7,6 +7,13 @@ info:
     GO / WAIT / NO-GO with reasons, then (on GO with a real wallet) unsigned
     approve + deposit calldata only.
 
+    Ops notes (IXS Discord, 24 Sep 2026 - HYB Avalanche):
+    - MCP deposit limit 0 may mean NAV staleness/drift, not permanently closed.
+      Integrators must NOT force a deposit; treat WAIT until MCP build succeeds.
+    - Settlement cutoff: 5:00 PM SGT (UTC+8), Singapore business days Mon-Fri,
+      for deposits and redemptions. Min deposit on Avalanche HYB: 100 USDC.
+    - HYB redemptions: no separate claim step (operator finalizes USDC).
+
     Security (honest):
     - No API auth today. Treat the base URL as a public rate-limited surface.
     - Per-IP rate limits (in-memory, per instance): preflight 6/min, intent 10/min,

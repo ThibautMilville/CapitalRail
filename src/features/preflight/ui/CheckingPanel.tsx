@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 
 const CHECKS = [
   { q: "Is the vault open?", a: "IXS vault status and access mode" },
-  { q: "Is there room for your amount?", a: "Live deposit limit, via IXS tools" },
+  { q: "Is there room for your amount?", a: "Live MCP deposit build (limit 0 may be NAV stale)" },
   { q: "Are you allowed in?", a: "Whitelist / KYC check for your wallet" },
-  { q: "Can you withdraw the way you want?", a: "Instant or delayed settlement" },
+  { q: "Can you withdraw the way you want?", a: "Instant or delayed (daily SGT cutoff)" },
 ];
 
 type CheckingPanelProps = {

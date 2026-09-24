@@ -200,14 +200,16 @@ export const PRODUCT_FACTS = {
     "On GO, unsigned approve + deposit transactions are prepared for your own wallet. CapitalRail never signs and never holds funds.",
   ],
   decisions: {
-    GO: "a vault fits every rule and accepts the deposit now",
-    WAIT: "a vault fits every rule but its deposit limit is 0 right now; capacity may return",
+    GO: "a vault fits every rule and MCP can build the deposit now",
+    WAIT: "a vault fits every rule but MCP reports deposit limit 0 (often NAV staleness/drift on Avalanche HYB, not permanently closed); CapitalRail refuses to force a deposit until build succeeds",
     "NO-GO": "no vault fits the rules (chain, KYC, withdrawal speed or balance)",
   },
   chains: ["BSC (chain id 56)", "Avalanche (chain id 43114)"],
   kyc: "Some IXS vaults require whitelist / KYC onboarding with IXS. With 'No KYC', only permissionless vaults are considered.",
   withdrawals:
-    "Instant withdrawals = sync settlement. Delayed withdrawals = ERC-7540 async: a request now, a claim later.",
+    "Instant withdrawals = sync settlement. Delayed withdrawals = async rails processed against the next daily cutoff (5:00 PM SGT / UTC+8, Singapore business days Mon-Fri). HYB redemptions: no separate claim step - operator finalizes USDC to the receiver.",
+  avalancheHybOps:
+    "Avalanche HYB open vault: MCP limit 0 often means NAV stale/drift; min deposit 100 USDC; do not force deposit when build fails with limit 0.",
   asset: "USDC",
   notAdvice: "CapitalRail is a technical preflight, not financial advice.",
 };

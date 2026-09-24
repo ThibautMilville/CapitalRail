@@ -117,3 +117,13 @@ Append-only journal of decisions and user feedback. Format: `YYYY-MM-DD - decisi
 - **404**: root `src/app/not-found.tsx` (navy / emerald-cyan, CapitalRailMark, Geist via layout). Links home, `/vaults`, `/#agents`. No `global-not-found` (experimental; single root layout). `data-cr-skip-intro` + CSS `:has()` skip Three.js OpeningIntro on 404.
 - **Toasts**: stack flush viewport top-right (`top` + safe-area only, high z-index above header); no longer offset under SiteHeader (`top-20` / `sm:top-24` removed).
 - **Deploy**: production Dokploy app `l7HAVs_hx4Rzi4YGdPLQg` (`capitalrail.ozc.fr`) after push to `master`.
+
+## 2026-09-24 (IXS Discord ops facts - Emirax/IXS to Tim/Cutoff)
+
+- **Source**: IXS Discord, 24 Sep 2026 (Emirax/IXS -> Tim/Cutoff). Encoded in `src/shared/ixs/ops-facts.ts` as `IXS_OPS_FACTS`, injected into SERV risk/ranking/verification payloads as `ixsOpsFacts`.
+- **MCP limit 0**: on Avalanche HYB open vault `6a952729732c2b84b55ce89d`, limit 0 relates to NAV staleness/drift - not permanently closed. CapitalRail still WAIT / refuses when MCP build fails with limit 0; no Avalanche `deposit()` bypass; safety override unchanged.
+- **Min deposit**: 100 USDC on that Avalanche product. Soft UI hint in RulesEditor when chain=Avalanche and amount < 100; BSC small demos (e.g. 1 USDC) not hard-blocked.
+- **Settlement**: daily cutoff 5:00 PM SGT (UTC+8), Singapore business days Mon-Fri; requests anytime, processed against next cutoff; deposits and redemptions. Singapore public holidays unanswered - not invented.
+- **Redemption**: no separate claim step (operator finalizes USDC to receiver). FAQ / Exit copy updated; optional MCP claim UI kept as fallback.
+- **Copy surfaces**: VerdictCard/verdict WAIT, decide-preflight explain + fallback risk/memo, Contrast/Why/Evidence/Pipeline/FAQ/How/Agents/OpenAPI/README - NAV-staleness + do-not-force-deposit language; differentiation vs Cutoff stays gatekeeper.
+- **No Dokploy redeploy** in this change unless the user asks.

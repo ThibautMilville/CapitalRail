@@ -41,11 +41,11 @@ export function humanReason(
   const chain = chainLabel(rail.chainId);
   switch (code) {
     case "DEPOSIT_LIMIT_ZERO":
-      return `The ${railTitle(rail)} is full right now (deposit limit 0).`;
+      return `The ${railTitle(rail)} reports MCP deposit limit 0 (often NAV stale/drift - not permanently closed). CapitalRail will not force a deposit.`;
     case "WHITELIST_REQUIRED":
       return `The ${railTitle(rail)} needs KYC / whitelist approval for this wallet.`;
     case "SETTLEMENT_ASYNC_UNSUPPORTED_BY_MANDATE":
-      return `The ${railTitle(rail)} only offers delayed withdrawals.`;
+      return `The ${railTitle(rail)} only offers delayed withdrawals (processed against the next daily cutoff).`;
     case "CHAIN_MISMATCH":
       return `${chain} is outside your chosen chain.`;
     case "INSUFFICIENT_BALANCE":
@@ -191,7 +191,8 @@ export function buildVerdict(
     return {
       tone: "wait",
       headline: "Not right now.",
-      summary: "A vault that fits your rules exists, but it has no deposit capacity at the moment.",
+      summary:
+        "A vault that fits your rules exists, but MCP reports deposit limit 0 (often NAV staleness/drift - not permanently closed). CapitalRail refuses to force a deposit until the build succeeds.",
       reasons: reasons.slice(0, 3),
       actions,
     };

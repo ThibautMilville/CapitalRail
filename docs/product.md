@@ -14,7 +14,9 @@ A dedicated **Vaults** page (`/vaults`) shows the live IXS catalogue: access, se
 
 ## Product thesis
 
-A naive agent reads "vault open" and tries to deposit. On the Avalanche IX High Yield Bond USDC vault, the deposit limit is `0`: the transaction fails or gets stuck. CapitalRail checks real capacity (limit, whitelist, deposit mode) before proposing anything, and prevents that failure.
+A naive agent reads "vault open" and tries to deposit. On the Avalanche IX High Yield Bond USDC vault, MCP can report deposit limit `0` (IXS ops, 24 Sep 2026: often NAV staleness/drift, not permanently closed). Forcing a deposit fails or gets stuck. CapitalRail checks real MCP buildability before proposing anything, answers WAIT, and never bypasses that gate. Differentiation vs desks that would force GO: we stay the gatekeeper.
+
+Ops anchors (same Discord source): min deposit **100 USDC** on that Avalanche HYB product; daily settlement cutoff **5:00 PM SGT (UTC+8)** Mon-Fri for deposits and redemptions; redemptions have **no separate claim step** (operator finalizes). Singapore public holidays for the cutoff calendar remain unanswered - do not invent.
 
 ## Target users
 

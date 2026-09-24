@@ -44,12 +44,13 @@ export function ContrastPanel({
             Naive Avalanche path
           </h3>
           <p className="m-0 text-sm text-slate-300">
-            Picks the first Avalanche permissionless vault and calls deposit.
+            Sees &quot;open&quot; + MCP limit 0 and still calls deposit (or treats
+            limit 0 as permanently closed).
           </p>
           <p className="mt-3 break-words font-mono text-[0.78rem] leading-snug text-rose-300/90">
             FAIL -{" "}
             {avalancheOpen?.depositBuildError ??
-              "Would fail if deposit limit is 0 or settlement is misunderstood."}
+              "Would fail if MCP limit is 0 (NAV stale) or settlement cutoff is ignored."}
           </p>
           {avalancheOpen?.reasonCodes.includes("DEPOSIT_LIMIT_ZERO") ? (
             <p className="mt-2 font-mono text-[0.68rem] uppercase tracking-[0.08em] text-rose-200/70">
@@ -62,8 +63,8 @@ export function ContrastPanel({
             CapitalRail path
           </h3>
           <p className="m-0 text-sm text-slate-300">
-            Checks every vault, refuses dead capacity, and only prepares
-            deposit steps when a path is really open.
+            Treats MCP limit 0 as WAIT (NAV may be stale - do not force deposit),
+            and only prepares deposit steps when a path is really open.
           </p>
           <p className="mt-3 break-words font-mono text-[0.78rem] leading-snug text-emerald-300/90">
             {decision === "GO" && selectedVaultId

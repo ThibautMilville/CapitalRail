@@ -82,6 +82,9 @@ export function ForAgentsSection() {
         not a desk. Other agents POST here before sending capital to IXS vaults.
         Humans use the guided flow above; agents use the same REST surface (and
         optional MCP) to get GO / WAIT / NO-GO with reasons - then only act on GO.
+        MCP deposit limit 0 may mean NAV staleness (not permanently closed); still
+        treat it as WAIT until build succeeds. Async HYB rails settle against a
+        daily 5:00 PM SGT cutoff.
       </p>
 
       <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
@@ -140,6 +143,7 @@ export function ForAgentsSection() {
           <li>No API auth today - rate limited per IP (preflight 6/min, intent 10/min, shared expensive 12/min).</li>
           <li>Browser cross-site Origin is blocked; curl / server-to-server / MCP (no Origin) are allowed.</li>
           <li>429 returns code RATE_LIMITED with Retry-After. Do not weaken limits from agents.</li>
+          <li>Never force a deposit when preflight returns WAIT / DEPOSIT_LIMIT_ZERO - limit 0 can mean NAV stale; CapitalRail waits for a successful MCP build.</li>
         </ul>
       </div>
 

@@ -21,7 +21,7 @@ const OFFERS: Offer[] = [
   {
     title: "Capacity alerts",
     who: "Allocators on WAIT",
-    body: "When a vault that fits your rules reports deposit limit 0, get notified the moment capacity returns, with a fresh preflight attached.",
+    body: "When a vault that fits your rules reports MCP deposit limit 0 (often NAV stale - not closed forever), get notified when build succeeds again, with a fresh preflight attached.",
     pricing: "Subscription",
   },
   {

@@ -8,11 +8,12 @@ const SHARED_RULES = `Grounding: only use facts present in the payload. Never in
 Style: plain English, ASCII hyphen "-" only. Output must match the provided JSON schema exactly.`;
 
 const FACTS_GLOSSARY = `Rail fact glossary:
-- settlement "sync" = shares and exit are immediate; "async-erc7540" = ERC-7540 request then claim, so exits are delayed (not instant).
+- settlement "sync" = shares and exit are immediate; "async-erc7540" = delayed / async settlement (not instant). For HYB Avalanche ops, see ixsOpsFacts: deposits and redemptions process against a daily cutoff; redemptions have no separate claim step (operator finalizes USDC to the receiver). Do not invent a claim workflow when ixsOpsFacts.redemptionClaim says otherwise.
 - ttm = time to maturity reported by IXS for the underlying product (cite it as reported, do not convert units).
 - totalAssets = assets currently in the vault as reported by IXS (in asset units). derived.amountShareOfVaultAssetsPct is computed by code: the share of the vault the requested amount would represent after deposit.
 - requiresWhitelist + whitelistOk=false means IXS whitelist / KYC onboarding is needed before a deposit.
-- reasonCodes DEPOSIT_LIMIT_ZERO = the vault accepts no deposit right now; INSUFFICIENT_BALANCE = the wallet holds less than the amount.`;
+- reasonCodes DEPOSIT_LIMIT_ZERO = MCP / deposit build reports limit 0 right now. On the Avalanche HYB vault in ixsOpsFacts, that often means NAV staleness or drift - not "vault permanently closed". Still: do not recommend forcing a deposit; CapitalRail correctly WAITs until build succeeds. INSUFFICIENT_BALANCE = the wallet holds less than the amount.
+- ixsOpsFacts (when present): cite only these operator anchors - minDepositUsdc, settlementCutoff, depositLimitZeroMeaning, redemptionClaim. Never invent Singapore public holidays (ixsOpsFacts.singaporePublicHolidays).`;
 
 export const RISK_SYSTEM_PROMPT = `You are CapitalRail's risk analyst and rules cross-checker for IXS RWA vault rails.
 

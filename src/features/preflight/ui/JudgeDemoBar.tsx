@@ -7,7 +7,7 @@ type JudgeDemoBarProps = {
 };
 
 const STEPS = [
-  "Check Avalanche: WAIT (deposit limit 0)",
+  "Check Avalanche: WAIT (MCP limit 0 / NAV)",
   "Try BSC instead: GO",
   "Connect and sign the deposit steps",
 ];

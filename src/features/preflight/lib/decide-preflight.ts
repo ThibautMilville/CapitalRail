@@ -1,3 +1,4 @@
+import { IXS_OPS_FACTS } from "@/shared/ixs/ops-facts";
 import type { RailSnapshot } from "@/shared/ixs/types";
 import { runTracedStep } from "@/shared/serv/client";
 import {
@@ -140,7 +141,7 @@ function explainBlock(rail: RailSnapshot, code: ReasonCode): string {
     case "INSUFFICIENT_BALANCE":
       return `Wallet holds ${shortBalance(rail)}, below the requested amount.`;
     case "DEPOSIT_LIMIT_ZERO":
-      return "Deposit limit is 0: the vault accepts no deposit right now.";
+      return "MCP deposit limit is 0 (often NAV stale/drift on Avalanche HYB): do not force a deposit; WAIT until build succeeds.";
     default:
       return rail.depositBuildError ?? `Rail status=${rail.status}`;
   }
@@ -171,7 +172,7 @@ export function rulesFilter(input: DecidePreflightInput): RulesEntry[] {
   });
 }
 
-/** A rail that fits every rule and is blocked only by a 0 deposit limit: capacity may return. */
+/** A rail that fits every rule and is blocked only by a 0 deposit limit: MCP build may succeed again after NAV refresh. */
 function capacityMayReturn(input: DecidePreflightInput): boolean {
   return input.rails.some(
     (rail) =>
@@ -252,8 +253,8 @@ export function fallbackRisk(
         vaultId: rail.vaultId,
         category: "exit_delay",
         severity: "caution",
-        note: `${label}: withdrawals are delayed (ERC-7540 request now, claim later), not instant.`,
-        facts: ["settlement"],
+        note: `${label}: async settlement - deposits and redemptions process against the next daily cutoff (5:00 PM SGT / UTC+8, Singapore business days Mon-Fri); HYB redemptions have no separate claim step.`,
+        facts: ["settlement", "ixsOpsFacts.settlementCutoff", "ixsOpsFacts.redemptionClaim"],
       });
     }
     if (rail.reasonCodes.includes("DEPOSIT_LIMIT_ZERO")) {
@@ -261,8 +262,8 @@ export function fallbackRisk(
         vaultId: rail.vaultId,
         category: "capacity",
         severity: "high",
-        note: `${label}: deposit limit is 0, a deposit would fail today.`,
-        facts: ["reasonCodes", "depositBuildError"],
+        note: `${label}: MCP deposit limit is 0 (often NAV staleness/drift, not permanently closed). Do not force a deposit; WAIT until MCP build succeeds.`,
+        facts: ["reasonCodes", "depositBuildError", "ixsOpsFacts.depositLimitZeroMeaning"],
       });
     }
     if (rail.requiresWhitelist && rail.whitelistOk !== true) {
@@ -354,7 +355,7 @@ export function fallbackRanking(
     const rationale = lowBalance
       ? `The ${chainLabel(lowBalance.chainId)} ${lowBalance.settlement} rail is open, but the wallet holds ${shortBalance(lowBalance)}, below ${input.amount} ${lowBalance.assetSymbol}.`
       : decision === "WAIT"
-        ? "No eligible rail; a rail that fits every rule reports deposit limit 0, so capacity may return."
+        ? "No eligible rail; a rail that fits every rule reports MCP deposit limit 0 (often NAV staleness/drift on Avalanche HYB). CapitalRail WAITs and does not force a deposit until build succeeds."
         : "No eligible rail; every rail is blocked, gated or outside the mandate.";
     return {
       selectedVaultId: null,
@@ -365,6 +366,8 @@ export function fallbackRanking(
         "",
         "No open IXS rail matches the mandate right now.",
         rationale,
+        "",
+        `Settlement clock (IXS ops): ${IXS_OPS_FACTS.settlementCutoff}`,
       ].join("\n"),
       userNextSteps: lowBalance
         ? [
@@ -373,8 +376,8 @@ export function fallbackRanking(
           ]
         : decision === "WAIT"
           ? [
-              "Re-check later: deposit capacity may reopen.",
-              "Try another chain if you do not want to wait.",
+              "Re-check later: MCP limit 0 may clear after NAV refresh - do not force a deposit.",
+              "Try another chain (e.g. BSC) if you do not want to wait.",
             ]
           : [
               "Loosen one rule (chain, KYC or instant withdrawals) and re-check.",
@@ -638,6 +641,7 @@ export async function decidePreflight(
     mandate,
     rulesFilter: { outcome, rails: rules },
     rails: railsWithFacts,
+    ixsOpsFacts: IXS_OPS_FACTS,
   };
   const riskPayloadText = JSON.stringify(riskPayload);
   const riskStep = await runTracedStep<RiskOutput>({
@@ -682,6 +686,7 @@ export async function decidePreflight(
       ineligibleRails: rules.filter((entry) => !entry.eligible),
       riskNotes: risk.riskNotes,
       intentReading: risk.intentReading,
+      ixsOpsFacts: IXS_OPS_FACTS,
     },
     schemaName: "capitalrail_ranking",
     jsonSchema: RANKING_JSON_SCHEMA as unknown as Record<string, unknown>,
@@ -720,6 +725,7 @@ export async function decidePreflight(
       },
       riskNotes: risk.riskNotes,
       rawRails: railsWithFacts,
+      ixsOpsFacts: IXS_OPS_FACTS,
     },
     schemaName: "capitalrail_verification",
     jsonSchema: VERIFICATION_JSON_SCHEMA as unknown as Record<string, unknown>,

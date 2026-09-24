@@ -39,7 +39,7 @@ function redeemableBase(position: ExitPosition): string {
 
 function settlementHint(settlement: string): string {
   if (settlement.startsWith("async")) {
-    return "Delayed exit (ERC-7540): request now, claim USDC later when claimable.";
+    return "Async exit: request anytime; processed against the next daily cutoff (5:00 PM SGT). IXS HYB ops: no separate claim - operator finalizes USDC to the receiver.";
   }
   if (settlement === "sync") {
     return "IXS may still queue the redemption cycle even on sync vaults.";
@@ -409,11 +409,12 @@ export function ExitPanel({ onGoEnter }: ExitPanelProps) {
               {selected.settlement.startsWith("async") ? (
                 <div className="mt-4 border-t border-white/8 pt-4">
                   <p className="m-0 text-[0.88rem] font-medium text-slate-200">
-                    Already requested? Claim when ready
+                    Optional claim fallback
                   </p>
                   <p className="m-0 mt-1 text-[0.78rem] text-slate-500">
-                    Async vaults need a second claim step. Check status, or paste a request id
-                    from the explorer / IXS UI.
+                    IXS HYB ops: no separate claim - operator finalizes USDC to the receiver.
+                    If MCP still exposes a claim path for this vault, check status or paste a
+                    request id from the explorer / IXS UI.
                   </p>
                   <div className="mt-2.5 flex flex-wrap gap-2">
                     <button type="button" className={btnGhost} onClick={() => void checkRequests()}>

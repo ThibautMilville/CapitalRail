@@ -15,7 +15,7 @@ const EMPTY_PATCH: Patch = {
 };
 
 const REASON_TEXT: Record<string, string> = {
-  DEPOSIT_LIMIT_ZERO: "deposit capacity is 0 right now",
+  DEPOSIT_LIMIT_ZERO: "MCP deposit limit is 0 (often NAV stale/drift - do not force deposit)",
   WHITELIST_REQUIRED: "it needs whitelist/KYC for this wallet",
   SETTLEMENT_ASYNC_UNSUPPORTED_BY_MANDATE:
     "it settles async (ERC-7540) while the mandate requires sync",
@@ -116,7 +116,7 @@ function answerChain(context: AgentContext, chainId: number): AgentAnswerOutput 
   let suggestedAction: AgentAnswerOutput["suggestedAction"] = null;
   let hint = "";
   if (all("DEPOSIT_LIMIT_ZERO")) {
-    hint = ` No mandate change can open ${chainName} while capacity is 0; rerun the preflight later.`;
+    hint = ` No mandate change can open ${chainName} while MCP reports limit 0 (often NAV stale); rerun later - do not force a deposit.`;
   } else if (some("SETTLEMENT_ASYNC_UNSUPPORTED_BY_MANDATE") && mandate.requireSyncSettlement) {
     suggestedAction = rerun({ requireSyncSettlement: false, preferredChainId: chainPatch });
     hint = " You can rerun with async settlement allowed.";
@@ -174,14 +174,14 @@ function answerSettlement(context: AgentContext): AgentAnswerOutput {
 
   if (!context.mandate.requireSyncSettlement) {
     return {
-      answer: `Async settlement is already allowed. ${asyncRails.length} rail(s) settle via ERC-7540 request/claim, meaning shares arrive after a later claim step.`,
+      answer: `Async settlement is already allowed. ${asyncRails.length} rail(s) settle async against the next daily cutoff (5:00 PM SGT); HYB redemptions have no separate claim step.`,
       citedFacts: asyncRails.slice(0, 5).map(railFact),
       suggestedAction: rerun({ requireSyncSettlement: true }),
     };
   }
 
   return {
-    answer: `The mandate requires sync settlement, so ${asyncRails.length} async ERC-7540 rail(s) are filtered out. Allowing async means a request now and a claim later.`,
+    answer: `The mandate requires sync settlement, so ${asyncRails.length} async rail(s) are filtered out. Allowing async means requests process against the next daily cutoff (not instant).`,
     citedFacts: asyncRails.slice(0, 5).map(railFact),
     suggestedAction: rerun({ requireSyncSettlement: false }),
   };

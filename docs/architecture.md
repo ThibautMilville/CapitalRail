@@ -62,7 +62,7 @@ Removed on 2026-09-23: `IntentChat`, `MandateBar`, `MandateForm`, `FlipBanner`, 
    - `risk` (SERV small): fact-grounded risk notes + independent eligibility cross-check; disagreements with the rules go to `trace.disagreements`.
    - `ranking` (SERV large): best eligible vault, ranking with reasons, memo, next steps.
    - `verification` (SERV small): pass / warn / fail; a hard fail vetoes a GO.
-   Each SERV step: strict JSON schema, zod, semantic checks (ids, eligibility, numbers must appear in the payload), deterministic fallback with the same shape.
+   Each SERV step: strict JSON schema, zod, semantic checks (ids, eligibility, numbers must appear in the payload), deterministic fallback with the same shape. Payload includes `ixsOpsFacts` from `src/shared/ixs/ops-facts.ts` (IXS Discord ops anchors) so SERV may cite cutoff / limit-0 meaning / min deposit without inventing.
 5. Deterministic safety override re-checks the final GO (e.g. deposit limit 0 forces NO-GO whatever the model says).
 6. On GO: unsigned tx pack + `snapshotHash` / `attestedAt`. With the placeholder demo wallet (`0x...0001`) the response is `preview: true` and carries no tx pack.
 7. With a real wallet, `scanRails` compares the wallet USDC balance with the amount and blocks the rail with `INSUFFICIENT_BALANCE`.
@@ -71,8 +71,8 @@ Removed on 2026-09-23: `IntentChat`, `MandateBar`, `MandateForm`, `FlipBanner`, 
 ### Exit flow (`#exit` on `/`)
 
 1. `GET /api/exit/positions?wallet` lists vaults with share balance / maxRedeem via REST positions + `vault_get` settlement.
-2. `POST /api/exit/redeem` calls `vault_build_request_redeem` (share amount in base units). Settlement may be `queued` (no claim step) or `async-erc7540` (claim later).
-3. `POST /api/exit/claim` calls `vault_build_claim_redeem` when a request id is claimable.
+2. `POST /api/exit/redeem` calls `vault_build_request_redeem` (share amount in base units). IXS HYB ops (24 Sep 2026): no separate claim - operator finalizes USDC to the receiver; requests process against the next daily SGT cutoff. UI still keeps an optional claim fallback when MCP exposes one.
+3. `POST /api/exit/claim` calls `vault_build_claim_redeem` when a request id is claimable (fallback path).
 4. `GET /api/exit/requests` wraps `vault_request_status` (IXS feed can be down; the UI then accepts a pasted request id).
 
 `ExitPanel` is embedded in `PreflightPage` below the entry flow; `/exit` only redirects to `/#exit`.
@@ -88,7 +88,7 @@ Removed on 2026-09-23: `IntentChat`, `MandateBar`, `MandateForm`, `FlipBanner`, 
 
 | Chain | Access | Vault id | Notes |
 |---|---|---|---|
-| Avalanche | open | `6a952729732c2b84b55ce89d` | async-erc7540, deposit limit 0 |
+| Avalanche | open | `6a952729732c2b84b55ce89d` | async; MCP limit 0 often = NAV stale (WAIT, never force); min 100 USDC; cutoff 5:00 PM SGT |
 | Avalanche | whitelist | `6a9a59c6ef910c9d0495e7e3` | |
 | BSC | whitelist | `6a8ecb61732c2b84b55ce88f` | |
 | BSC | open | `6a26624ca7d16b245d665475` | the only GO path; reported `sync` earlier, `async-erc7540` on 2026-09-23 (value can change between scans) |

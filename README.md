@@ -12,7 +12,9 @@ Before any capital moves, CapitalRail checks the live IXS vaults (capacity, whit
 
 ## Why this product
 
-IXS exposes one High Yield Bond product across four vaults (BSC / Avalanche, KYC vs open). The open Avalanche vault is listed as open but reports a deposit limit of `0`: a naive agent that reads "open" and deposits gets a failed or stuck transaction. CapitalRail treats that as the product: **preflight before deposit**.
+IXS exposes one High Yield Bond product across four vaults (BSC / Avalanche, KYC vs open). The open Avalanche vault is listed as open but MCP can report a deposit limit of `0` (often NAV staleness/drift, not permanently closed). A naive agent that reads "open" and deposits - or that forces a deposit past limit 0 - gets a failed or stuck transaction. CapitalRail treats that as the product: **preflight before deposit**, KEEP WAIT until MCP build succeeds.
+
+Settlement for async HYB rails: daily cutoff **5:00 PM SGT (UTC+8)** on Singapore business days (Mon-Fri), for deposits and redemptions. Min deposit on Avalanche HYB: **100 USDC**. Redemptions: no separate claim step (operator finalizes).
 
 ## How it works
 
@@ -76,6 +78,8 @@ CapitalRail is a **preflight gatekeeper** other agents call before allocating to
 | Tools | `POST /api/preflight` (GO / WAIT / NO-GO) and `POST /api/intent` (message → mandate) |
 
 Copy-paste curls, OpenAI/Anthropic tool JSON, and Cursor MCP config live in the For agents section. No API auth today; rate limited per IP; browser cross-site Origin blocked.
+
+**Agent rule**: when `decision` is WAIT / reason `DEPOSIT_LIMIT_ZERO`, do not force a deposit (limit 0 may mean NAV stale). Wait for a successful MCP build. Async rails settle against the daily SGT cutoff.
 
 ### MCP (optional)
 

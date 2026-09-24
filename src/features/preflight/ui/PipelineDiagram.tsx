@@ -155,7 +155,7 @@ export function PipelineDiagram({
   const blockedSub = blockedRails.some((r) =>
     r.reasonCodes.includes("DEPOSIT_LIMIT_ZERO"),
   )
-    ? "incl. Avalanche limit 0"
+    ? "incl. AVAX MCP limit 0 (NAV stale)"
     : "Naive AVAX path fails here";
 
   return (

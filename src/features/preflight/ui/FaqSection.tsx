@@ -11,7 +11,7 @@ const FAQ_ITEMS: FaqItem[] = [
   {
     question: "What is CapitalRail?",
     answer:
-      "An entry preflight agent for IXS vaults. Before any capital moves, it scans the live IXS vaults, decides GO / WAIT / NO-GO with explicit reasons, and only prepares unsigned transactions when capacity is real.",
+      "An entry preflight agent for IXS vaults. Before any capital moves, it scans the live IXS vaults, decides GO / WAIT / NO-GO with explicit reasons, and only prepares unsigned transactions when MCP can really build a deposit.",
   },
   {
     question: "What is SERV Reasoning and why not just an LLM?",
@@ -26,7 +26,12 @@ const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Why was Avalanche refused, and what does WAIT mean?",
     answer:
-      "The open Avalanche vault currently has a deposit limit of 0, so a deposit cannot go through. When no vault fits but capacity may come back on your chosen chain, the decision is WAIT. NO-GO means no vault fits your rules for other reasons (for example whitelist, withdrawal speed or balance).",
+      "When MCP reports deposit limit 0 on the open Avalanche HYB vault, that often means NAV staleness or drift - not that the vault is permanently closed. CapitalRail still answers WAIT and will not force a deposit until MCP build succeeds (gatekeeper, not desk). Min deposit on that Avalanche product is 100 USDC. NO-GO means no vault fits your rules for other reasons (for example whitelist, withdrawal speed or balance).",
+  },
+  {
+    question: "When are deposits and redemptions processed?",
+    answer:
+      "Per IXS ops for this HYB product: daily cutoff at 5:00 PM SGT (UTC+8) on Singapore business days Mon-Fri. You can submit requests anytime; they are processed against the next cutoff. This applies to both deposits and redemptions. Singapore public holiday handling for the calendar is still unanswered - CapitalRail does not invent a holiday list.",
   },
   {
     question: "What does KYC / whitelist mean here?",
@@ -41,17 +46,17 @@ const FAQ_ITEMS: FaqItem[] = [
   {
     question: "What are the deposit steps and how do I sign them?",
     answer:
-      "On GO with a connected wallet, IXS tools build two unsigned transactions for the selected vault: approve, then deposit. You sign them in that order in your own wallet, and get an explorer link once confirmed. CapitalRail never broadcasts anything for you.",
+      "On GO with a connected wallet, IXS tools build two unsigned transactions for the selected vault: approve, then deposit. You sign them in that order in your own wallet, and get an explorer link once confirmed. CapitalRail never broadcasts anything for you. Async rails still settle against the daily SGT cutoff.",
   },
   {
     question: "How do I get my USDC back?",
     answer:
-      "Scroll to Exit on this page (or open /#exit). Connect the same wallet, pick a vault with shares, prepare an unsigned redeem (and claim on async ERC-7540 vaults), then sign in your wallet. Redemptions often follow a vault cycle - they are not always instant. The IXS request-status feed can be temporarily unavailable; you can still paste a request id to claim.",
+      "Scroll to Exit on this page (or open /#exit). Connect the same wallet, pick a vault with shares, prepare an unsigned redeem, then sign in your wallet. Per IXS HYB ops there is no separate claim step: the operator finalizes and USDC goes to the receiver. Requests process against the next daily cutoff (5:00 PM SGT). If MCP still exposes a claim path for a given vault, the Exit UI can prepare it as a fallback.",
   },
   {
     question: "Can other agents call CapitalRail?",
     answer:
-      "Yes. CapitalRail is built as a preflight tool other agents call before allocating to IXS vaults. See the For agents section (#agents): OpenAPI at /openapi.yaml documents POST /api/preflight and POST /api/intent. No API auth today; calls are rate limited per IP. Optional MCP: npm run mcp with CAPITALRAIL_BASE_URL.",
+      "Yes. CapitalRail is built as a preflight tool other agents call before allocating to IXS vaults. See the For agents section (#agents): OpenAPI at /openapi.yaml documents POST /api/preflight and POST /api/intent. Treat MCP limit 0 as WAIT (do not force deposit). No API auth today; calls are rate limited per IP. Optional MCP: npm run mcp with CAPITALRAIL_BASE_URL.",
   },
   {
     question: "Is this financial advice?",

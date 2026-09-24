@@ -28,8 +28,8 @@ function stepCopy(step: TxStep, pack: ExitTxPack) {
       body:
         step.description ??
         (pack.needsClaim
-          ? "Queues your shares for redemption. You will claim USDC in a later step once IXS marks it claimable."
-          : "Queues your shares for redemption. This vault returns USDC after its redemption cycle - no separate claim step."),
+          ? "Queues your shares for redemption. MCP exposed a claim path for this vault; prefer waiting for operator finalization when IXS marks USDC claimable."
+          : "Queues your shares for redemption. Per IXS HYB ops there is no separate claim step - the operator finalizes and USDC goes to the receiver (against the next daily cutoff)."),
       action: pack.kind === "claim" ? "Claim USDC" : "Request exit",
     };
   }

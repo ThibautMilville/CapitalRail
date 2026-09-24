@@ -18,7 +18,7 @@ const TRUST_POINTS: TrustPoint[] = [
   },
   {
     title: "Refuses instead of guessing",
-    body: "If capacity is not real, CapitalRail says WAIT or NO-GO and explains why, rather than proposing a transaction that will fail.",
+    body: "If MCP reports deposit limit 0 (often NAV stale, not closed forever), CapitalRail says WAIT and explains why - it never forces an unsafe deposit.",
   },
 ];
 
@@ -44,18 +44,21 @@ export function WhyCapitalRailSection() {
           </p>
           <p className="m-0 mt-2 text-[0.85rem] leading-relaxed text-slate-300">
             The Avalanche IX High Yield Bond USDC vault is listed as open, but
-            its deposit limit is{" "}
-            <span className="font-mono text-rose-200">0</span>. An agent that
-            only reads &quot;open&quot; would build a deposit that fails or gets
-            stuck.
+            MCP can report deposit limit{" "}
+            <span className="font-mono text-rose-200">0</span>. Per IXS ops,
+            that often means NAV staleness or drift - not a permanently closed
+            vault. An agent that only reads &quot;open&quot; (or that forces a
+            deposit past limit 0) would build a transaction that fails.
           </p>
           <p className="m-0 mt-2 text-[0.85rem] leading-relaxed text-slate-300">
-            CapitalRail reads the real capacity, flags{" "}
+            CapitalRail flags{" "}
             <span className="font-mono text-[0.78rem] text-amber-200">
               DEPOSIT_LIMIT_ZERO
             </span>
-            , and refuses that rail. A code-level override enforces it even if
-            the model disagrees.
+            , answers WAIT, and refuses that rail until MCP build succeeds. A
+            code-level override enforces it even if the model disagrees. Min
+            deposit on this Avalanche HYB product is 100 USDC; settlement runs
+            against a daily 5:00 PM SGT cutoff.
           </p>
         </div>
 

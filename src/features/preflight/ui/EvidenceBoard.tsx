@@ -18,7 +18,7 @@ function factForReason(
 
   switch (reasonCode) {
     case "DEPOSIT_LIMIT_ZERO":
-      return `${chainLabel(rail.chainId)} ${rail.symbol}: deposit build blocked - ${rail.depositBuildError?.slice(0, 96) ?? "limit 0"}`;
+      return `${chainLabel(rail.chainId)} ${rail.symbol}: MCP limit 0 (often NAV stale/drift - do not force deposit) - ${rail.depositBuildError?.slice(0, 72) ?? "limit 0"}`;
     case "WHITELIST_REQUIRED":
       return `${chainLabel(rail.chainId)} ${rail.symbol}: whitelist=${String(rail.whitelistOk)} (requiresWhitelist=${rail.requiresWhitelist})`;
     case "SETTLEMENT_ASYNC_UNSUPPORTED_BY_MANDATE":

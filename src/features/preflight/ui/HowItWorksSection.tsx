@@ -19,22 +19,22 @@ const STEPS: Step[] = [
   },
   {
     title: "Scan the live IXS vaults",
-    body: "CapitalRail reads the 4 live IX High Yield Bond USDC vaults on BSC and Avalanche through the IXS REST API and MCP tools: access mode, deposit limit, whitelist status and settlement mode.",
+    body: "CapitalRail reads the 4 live IX High Yield Bond USDC vaults on BSC and Avalanche through the IXS REST API and MCP tools: access mode, deposit limit, whitelist status and settlement mode (including the daily SGT cutoff for async rails).",
     tag: "IXS REST + MCP",
   },
   {
     title: "Rules are code, judgment is SERV",
-    body: "Code applies the hard rules (chain, capacity, KYC, withdrawal speed, balance) and sets GO / WAIT / NO-GO. SERV Reasoning then writes fact-grounded risk notes, cross-checks the rules, ranks the vaults that pass and independently verifies the memo. Every step is schema-validated and traced.",
+    body: "Code applies the hard rules (chain, capacity, KYC, withdrawal speed, balance) and sets GO / WAIT / NO-GO. SERV Reasoning then writes fact-grounded risk notes (NAV-staleness limit 0, settlement clock, redemption ops), cross-checks the rules, ranks the vaults that pass and independently verifies the memo. Every step is schema-validated and traced.",
     tag: "Code + SERV Reasoning",
   },
   {
     title: "Code-level safety override",
-    body: "Deterministic checks run again after the model. A vault with a deposit limit of 0 or an unmet whitelist can never be selected, whatever the model says. SERV can veto an entry, never unlock one.",
+    body: "Deterministic checks run again after the model. A vault with MCP deposit limit 0 or an unmet whitelist can never be selected, whatever the model says - integrators must not force deposits past limit 0. SERV can veto an entry, never unlock one.",
     tag: "Guardrail",
   },
   {
     title: "Review and sign yourself",
-    body: "Only on GO, and only for your connected wallet, IXS tools build unsigned approve + deposit steps. You sign them in order in your own wallet. Nothing is signed server-side.",
+    body: "Only on GO, and only for your connected wallet, IXS tools build unsigned approve + deposit steps. You sign them in order in your own wallet. Nothing is signed server-side. Async deposits still settle against the next cutoff.",
     tag: "Deposit steps",
   },
 ];

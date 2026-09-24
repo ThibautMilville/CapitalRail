@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { MandateValues } from "@/features/preflight/lib/mandate";
+import { belowAvalancheHybMinDeposit } from "@/shared/ixs/ops-facts";
 
 type RulesEditorProps = {
   value: MandateValues;
@@ -22,10 +23,12 @@ function AmountField({
   amount,
   onCommit,
   disabled,
+  softHint,
 }: {
   amount: string;
   onCommit: (next: string) => void;
   disabled?: boolean;
+  softHint?: string | null;
 }) {
   const [draft, setDraft] = useState(amount);
   const valid = /^\d+(\.\d+)?$/.test(draft) && Number(draft) > 0;
@@ -36,26 +39,33 @@ function AmountField({
   };
 
   return (
-    <label className="flex min-h-11 items-center gap-2 rounded-xl border border-emerald-200/15 bg-black/25 px-3 focus-within:border-emerald-200/35">
-      <span className="text-[0.8rem] text-slate-400">Amount</span>
-      <input
-        className="w-full min-w-0 border-0 bg-transparent text-right font-mono text-[0.95rem] text-[#f5fbfd] outline-none"
-        value={draft}
-        onChange={(event) => setDraft(event.target.value.trim())}
-        onBlur={commit}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            commit();
-          }
-        }}
-        inputMode="decimal"
-        aria-label="Amount in USDC"
-        aria-invalid={!valid}
-        disabled={disabled}
-      />
-      <span className="font-mono text-[0.75rem] text-slate-500">USDC</span>
-    </label>
+    <div className="grid gap-1.5">
+      <label className="flex min-h-11 items-center gap-2 rounded-xl border border-emerald-200/15 bg-black/25 px-3 focus-within:border-emerald-200/35">
+        <span className="text-[0.8rem] text-slate-400">Amount</span>
+        <input
+          className="w-full min-w-0 border-0 bg-transparent text-right font-mono text-[0.95rem] text-[#f5fbfd] outline-none"
+          value={draft}
+          onChange={(event) => setDraft(event.target.value.trim())}
+          onBlur={commit}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              commit();
+            }
+          }}
+          inputMode="decimal"
+          aria-label="Amount in USDC"
+          aria-invalid={!valid}
+          disabled={disabled}
+        />
+        <span className="font-mono text-[0.75rem] text-slate-500">USDC</span>
+      </label>
+      {softHint ? (
+        <p className="m-0 rounded-lg border border-amber-200/25 bg-amber-200/[0.06] px-2.5 py-1.5 font-mono text-[0.68rem] leading-snug text-amber-100/90">
+          {softHint}
+        </p>
+      ) : null}
+    </div>
   );
 }
 
@@ -107,6 +117,13 @@ export function RulesEditor({ value, onChange, disabled }: RulesEditorProps) {
   const update = (patch: Partial<MandateValues>) =>
     onChange({ ...value, ...patch });
 
+  const avalancheMinHint = belowAvalancheHybMinDeposit(
+    value.amount,
+    value.preferredChainId,
+  )
+    ? "IXS HYB Avalanche: min deposit is 100 USDC (soft hint - not a hard block)."
+    : null;
+
   return (
     <div className="grid gap-2.5 sm:grid-cols-2">
       <AmountField
@@ -114,6 +131,7 @@ export function RulesEditor({ value, onChange, disabled }: RulesEditorProps) {
         amount={value.amount}
         onCommit={(amount) => update({ amount })}
         disabled={disabled}
+        softHint={avalancheMinHint}
       />
       <div
         role="radiogroup"
@@ -144,7 +162,7 @@ export function RulesEditor({ value, onChange, disabled }: RulesEditorProps) {
       <Toggle
         checked={value.requireSyncSettlement}
         label="Instant withdrawals only"
-        hint="Skip vaults that settle later (ERC-7540 requests)"
+        hint="Skip vaults that settle later (daily SGT cutoff)"
         onToggle={() =>
           update({ requireSyncSettlement: !value.requireSyncSettlement })
         }
