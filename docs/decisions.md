@@ -127,3 +127,10 @@ Append-only journal of decisions and user feedback. Format: `YYYY-MM-DD - decisi
 - **Redemption**: no separate claim step (operator finalizes USDC to receiver). FAQ / Exit copy updated; optional MCP claim UI kept as fallback.
 - **Copy surfaces**: VerdictCard/verdict WAIT, decide-preflight explain + fallback risk/memo, Contrast/Why/Evidence/Pipeline/FAQ/How/Agents/OpenAPI/README - NAV-staleness + do-not-force-deposit language; differentiation vs Cutoff stays gatekeeper.
 - **No Dokploy redeploy** in this change unless the user asks.
+
+## 2026-09-24 (model routing cost cut + ranking why harden)
+
+- **Reversal vs 2026-09-23 OpenJEV rejection (scope only)**: OpenJEV stays rejected for GO/WAIT/NO-GO. Now allowed for the **fast intent path only** (choice/noul for KYC / sync / chain; amount via regex) when `OPENJEV_API_KEY` is set. Without the key, intent uses SERV `fast` (`gpt-5.4-mini`). Never unlocks a GO.
+- **Model policy** (`src/shared/serv/model-policy.ts`): tiers `fast` / `small` / `large`. Defaults: intent+verification=`fast`, risk+ranking+agent=`small`. Ranking moved off `gpt-5.4` onto mini by default (restore with `SERV_TIER_RANKING=large`). Env: `SERV_MODEL_FAST|SMALL|LARGE`, optional `SERV_TIER_*`.
+- **Ranking fallback fix**: live prod saw intermittent `ranking.0.why` > 300 chars -> schema fail -> fallback. Server-side truncate of bounded strings before zod (`sanitizeServPayload`); ranking prompt now requires `why` <= 280 chars. Keep zod max at 300.
+- **Health**: `/api/health` reports `models`, `tiers`, and `openjev` (configured flag + steps) with no secrets.

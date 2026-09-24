@@ -43,14 +43,18 @@ function formatTokens(value: number | null) {
 
 function modeBadge(steps: ReasoningStepTrace[]) {
   const modelSteps = steps.filter((step) => step.source !== "code");
-  const serv = modelSteps.filter((step) => step.source === "serv").length;
-  if (modelSteps.length > 0 && serv === modelSteps.length) {
+  const live = modelSteps.filter(
+    (step) => step.source === "serv" || step.source === "openjev",
+  ).length;
+  if (modelSteps.length > 0 && live === modelSteps.length) {
     return {
-      label: "SERV live",
+      label: live && modelSteps.some((s) => s.source === "openjev")
+        ? "Live (SERV + OpenJEV)"
+        : "SERV live",
       tone: "border-emerald-200/35 bg-emerald-200/[0.08] text-emerald-200",
     };
   }
-  if (serv === 0) {
+  if (live === 0) {
     const noKey = modelSteps.every((step) => step.fallbackReason === NO_KEY_REASON);
     return {
       label: noKey ? "Fallback (no SERV_API_KEY)" : "Fallback",
@@ -58,7 +62,7 @@ function modeBadge(steps: ReasoningStepTrace[]) {
     };
   }
   return {
-    label: `SERV + fallback (${serv}/${modelSteps.length})`,
+    label: `Live + fallback (${live}/${modelSteps.length})`,
     tone: "border-cyan-200/35 bg-cyan-200/[0.06] text-cyan-100",
   };
 }
@@ -66,6 +70,9 @@ function modeBadge(steps: ReasoningStepTrace[]) {
 function sourceChip(step: ReasoningStepTrace) {
   if (step.source === "serv") {
     return { label: "SERV", tone: "border-emerald-200/30 text-emerald-200/90" };
+  }
+  if (step.source === "openjev") {
+    return { label: "OpenJEV", tone: "border-cyan-200/30 text-cyan-100/90" };
   }
   if (step.source === "code") {
     return { label: "Code", tone: "border-cyan-200/30 text-cyan-100/90" };
@@ -75,8 +82,11 @@ function sourceChip(step: ReasoningStepTrace) {
 
 function tierLabel(step: ReasoningStepTrace) {
   if (!step.tier) return "rules engine";
-  const model = step.source === "serv" ? step.model : step.routedModel;
-  return `${step.tier} · ${step.source === "serv" ? model : `routed ${model}`}`;
+  const model =
+    step.source === "serv" || step.source === "openjev"
+      ? step.model
+      : step.routedModel;
+  return `${step.tier} · ${step.source === "serv" || step.source === "openjev" ? model : `routed ${model}`}`;
 }
 
 function stepCost(step: ReasoningStepTrace) {

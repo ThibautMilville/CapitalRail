@@ -33,3 +33,5 @@ Ideas log. Status: `done`, `in progress`, `idea`, `rejected`. Append new ideas a
 | 2026-09-23 | Public `/vaults` catalog page | done | Live inventory: REST `/vaults` (4) + MCP `vault_get` pricing; show chain, KYC, settlement, TVL, price/share, ttm as maturity (not APY), transparency when present; CTA Check entry / Exit. Prefer REST list over MCP `vaults_list` (only 2 whitelist vaults). Skip null metrics, inactive ixsRewards, subgraph/rpc/ratePool. |
 | 2026-09-23 | OpenJEV (Jev) for GO/WAIT/NO-GO class | rejected | TypeSafe System One via openjev.sh; real API, not OpenServ. Outcome stays code-owned; no OPENJEV_API_KEY; would not help SERV-meaningful scoring. Optional advisory-only later if a key appears. |
 | 2026-09-23 | Agent-facing REST + OpenAPI + thin MCP | done | Section `#agents`, `public/openapi.yaml` (preflight + intent only), curl/tool snippets, `mcp/server.ts` via `npm run mcp` |
+| 2026-09-24 | OpenJEV for fast intent only (not GO class) | done | Reversal of full rejection for intent path; still never owns GO/WAIT/NO-GO |
+| 2026-09-24 | Cheaper model tiers (fast/small/large) | done | Ranking default off large onto mini; OpenJEV optional for intent |

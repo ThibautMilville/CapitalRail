@@ -38,7 +38,7 @@ export const intentSchema = z.object({
 export type IntentOutput = z.infer<typeof intentSchema>;
 
 export type ParsedIntent = IntentOutput & {
-  reasoning: "serv" | "fallback";
+  reasoning: "serv" | "openjev" | "fallback";
   trace: ReasoningStepTrace;
 };
 

@@ -777,7 +777,10 @@ export async function decidePreflight(
 
   return {
     ...final,
-    reasoning: rankingStep.trace.source === "serv" ? "serv" : "fallback",
+    reasoning:
+      rankingStep.trace.source === "serv" || rankingStep.trace.source === "openjev"
+        ? "serv"
+        : "fallback",
     rationale: proposal.rationale,
     verification,
     riskNotes: risk.riskNotes,

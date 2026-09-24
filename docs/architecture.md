@@ -99,9 +99,12 @@ USDC decimals: 18 on BSC, 6 on Avalanche.
 
 | Name | Scope | Notes |
 |---|---|---|
-| `SERV_API_KEY` | server-only | Currently NOT set: the app runs in deterministic fallback |
-| `SERV_MODEL_SMALL` | server | Default `gpt-5.4-mini` (intent, risk, verification, agent) |
-| `SERV_MODEL_LARGE` | server | Default `gpt-5.4` (ranking + memo) |
+| `SERV_API_KEY` | server-only | Live SERV Reasoning; without it steps use deterministic fallback |
+| `SERV_MODEL_FAST` | server | Default `gpt-5.4-mini` (intent, verification) |
+| `SERV_MODEL_SMALL` | server | Default `gpt-5.4-mini` (risk, ranking+memo, agent) |
+| `SERV_MODEL_LARGE` | server | Default `gpt-5.4` (unused by default; set `SERV_TIER_RANKING=large` to use) |
+| `SERV_TIER_*` | server | Optional per-step tier override (`INTENT`, `RISK`, `RANKING`, `VERIFICATION`, `AGENT`) |
+| `OPENJEV_API_KEY` | server-only | Optional; fast intent path only (choice/noul). Falls back to SERV fast |
 | `SERV_PRICES_JSON` | server | Optional price table override for the cost estimate |
 | `IXS_API_BASE_URL` | server | `https://api-v2.ixs.finance` |
 | `IXS_MCP_URL` | server | `https://api-v2.ixs.finance/mcp` |
@@ -144,3 +147,9 @@ Done: multi-step pipeline (code rules -> SERV risk notes + cross-check -> rankin
 - UI: `ForAgentsSection` (`#agents`) with curls, tool JSON, MCP Cursor config; header link Agents.
 - Thin MCP: `mcp/server.ts` (`npm run mcp`), tools `capitalrail_preflight` / `capitalrail_intent`, env `CAPITALRAIL_BASE_URL` (default `https://capitalrail.ozc.fr`). Proxies to the Next routes; no duplicated decision logic.
 - Snippets: `src/features/preflight/lib/agent-api-docs.ts`.
+
+## Model policy (2026-09-24)
+
+- Source of truth: `src/shared/serv/model-policy.ts` (re-exported from `config.ts`).
+- Tiers: `fast` (intent, verification), `small` (risk, ranking+memo, agent), `large` (available; ranking uses it only if `SERV_TIER_RANKING=large`).
+- OpenJEV: optional fast intent only (`src/shared/openjev/`). SERV JSON path sanitizes/truncates bounded fields before zod (`src/shared/serv/sanitize.ts`).

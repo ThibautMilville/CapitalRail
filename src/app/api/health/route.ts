@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { readStats } from "@/shared/http/instance-stats";
 import { RATE_LIMITS, rateLimitResponse } from "@/shared/http/rate-limit";
 import { listVaults } from "@/shared/ixs/rest";
-import { servModels } from "@/shared/serv/config";
+import { modelPolicyHealth } from "@/shared/serv/model-policy";
 import { hasServApiKey } from "@/shared/serv/client";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +24,8 @@ export async function GET(request: Request) {
   const limited = rateLimitResponse(request, RATE_LIMITS.health);
   if (limited) return limited;
 
+  const policy = modelPolicyHealth();
+
   try {
     const vaultCount = await cachedVaultCount();
     return NextResponse.json({
@@ -34,7 +36,7 @@ export async function GET(request: Request) {
       },
       serv: {
         configured: hasServApiKey(),
-        models: servModels(),
+        ...policy,
       },
       stats: readStats(),
     });
@@ -43,7 +45,7 @@ export async function GET(request: Request) {
       {
         ok: false,
         error: "health check failed",
-        serv: { configured: hasServApiKey(), models: servModels() },
+        serv: { configured: hasServApiKey(), ...policy },
         stats: readStats(),
       },
       { status: 503 },

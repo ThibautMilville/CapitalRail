@@ -1,3 +1,4 @@
+import { tryParseIntentWithOpenJev } from "@/shared/openjev/parse-intent-fast";
 import { runTracedStep } from "@/shared/serv/client";
 import { amountSchema } from "@/shared/validation/amount";
 import {
@@ -67,8 +68,25 @@ function fallbackParseIntent(message: string): IntentOutput {
   };
 }
 
+function liveReasoning(
+  source: "serv" | "openjev" | "fallback" | "code",
+): "serv" | "openjev" | "fallback" {
+  if (source === "openjev") return "openjev";
+  if (source === "serv") return "serv";
+  return "fallback";
+}
+
 export async function parseIntent(message: string): Promise<ParsedIntent> {
   const trimmed = message.trim();
+
+  const openjev = await tryParseIntentWithOpenJev(trimmed);
+  if (openjev) {
+    return {
+      ...openjev.output,
+      reasoning: "openjev",
+      trace: openjev.trace,
+    };
+  }
 
   const { output, trace } = await runTracedStep<IntentOutput>({
     step: "intent",
@@ -88,5 +106,10 @@ export async function parseIntent(message: string): Promise<ParsedIntent> {
       ? `${output.summary} SERV unavailable (${trace.fallbackReason}).`
       : output.summary;
 
-  return { ...output, summary, reasoning: trace.source === "serv" ? "serv" : "fallback", trace };
+  return {
+    ...output,
+    summary,
+    reasoning: liveReasoning(trace.source),
+    trace,
+  };
 }

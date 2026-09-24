@@ -150,7 +150,9 @@ function traceMeta(response: AgentResponse): string {
       ? null
       : (trace.promptTokens ?? 0) + (trace.completionTokens ?? 0);
   return [
-    trace.source === "serv" ? `SERV ${trace.model}` : "Fallback",
+    trace.source === "serv" || trace.source === "openjev"
+      ? `${trace.source === "openjev" ? "OpenJEV" : "SERV"} ${trace.model}`
+      : "Fallback",
     `${trace.durationMs} ms`,
     tokens == null ? null : `${tokens} tok`,
   ]

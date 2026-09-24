@@ -1,7 +1,7 @@
 import type { ServModelTier } from "./config";
 
 /** "code" = deterministic rule step (authoritative), never a model. */
-export type TraceSource = "serv" | "fallback" | "code";
+export type TraceSource = "serv" | "openjev" | "fallback" | "code";
 
 export const NO_KEY_REASON = "no SERV_API_KEY";
 
@@ -65,7 +65,8 @@ export function computeTraceTotals(steps: ReasoningStepTrace[]): TraceTotals {
   const completionTokens = sumNullable(
     steps.map((step) => step.completionTokens),
   );
-  const servSteps = steps.filter((step) => step.source === "serv").length;
+  const liveSources = new Set(["serv", "openjev"]);
+  const servSteps = steps.filter((step) => liveSources.has(step.source)).length;
   const fallbackSteps = steps.filter((step) => step.source === "fallback").length;
 
   return {

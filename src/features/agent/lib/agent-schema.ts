@@ -71,7 +71,7 @@ export const agentContextSchema = z.object({
     .array(
       z.object({
         id: z.string(),
-        source: z.enum(["serv", "fallback", "code"]),
+        source: z.enum(["serv", "openjev", "fallback", "code"]),
         model: z.string(),
         ok: z.boolean(),
         durationMs: z.number(),

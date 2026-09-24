@@ -31,18 +31,18 @@ CapitalRail does not ask a model to re-apply rules that code can check exactly. 
 
 | Step | Who | Tier (default model) | Output |
 | --- | --- | --- | --- |
-| Intent (`POST /api/intent`) | SERV | small (`gpt-5.4-mini`) | mandate from fuzzy free text |
+| Intent (`POST /api/intent`) | OpenJEV when keyed, else SERV | fast (`openjev` / `gpt-5.4-mini`) | mandate from fuzzy free text |
 | 1. Rules filter | **code** (authoritative) | - | per vault: eligible + most blocking reason; outcome GO / WAIT / NO-GO |
 | 2. Risk notes + rules cross-check | SERV | small (`gpt-5.4-mini`) | fact-grounded risk notes (delayed ERC-7540 exit, time to maturity, small vault / concentration, KYC onboarding, capacity) + SERV's own eligibility view per vault |
-| 3. Ranking + memo | SERV | large (`gpt-5.4`) | best eligible vault with a rationale, full ranking, investment memo, next steps |
-| 4. Independent verifier | SERV | small (`gpt-5.4-mini`) | pass / warn / fail with typed issues; a hard `fail` vetoes a GO |
+| 3. Ranking + memo | SERV | small (`gpt-5.4-mini`) | best eligible vault with a rationale, full ranking, investment memo, next steps |
+| 4. Independent verifier | SERV | fast (`gpt-5.4-mini`) | pass / warn / fail with typed issues; a hard `fail` vetoes a GO |
 | Safety override | **code** | - | re-checks the final GO (open, buildable, inside the mandate) |
 | Decision agent (`POST /api/agent`) | SERV | small (`gpt-5.4-mini`) | answers, cited facts, optional rule change to re-check |
 
 - **SERV can veto an entry, never unlock one.** Where SERV's cross-check disagrees with the code rules, or the verifier contradicts the proposal, the disagreement is listed in the trace (`disagreements`) with how it was resolved.
-- **Grounding**: every SERV step gets a strict JSON schema (`response_format: json_schema`, `strict: true`), is validated with zod, and passes semantic checks (every vault id exists, the selection is eligible, and every number in a risk note must appear in the payload). Numbers the model needs (for example the share of the vault your deposit would represent) are computed by code and passed as `derived` facts.
-- **Model routing**: `SERV_MODEL_SMALL` (default `gpt-5.4-mini`) and `SERV_MODEL_LARGE` (default `gpt-5.4`), see `.env.example` and `src/shared/serv/config.ts`.
-- **Trace**: per step the source (code / SERV / fallback), tier, model, latency, prompt / completion tokens and an **estimated cost** (OpenAI list prices checked 2026-09-23, labeled as an estimate; SERV billing may differ; override with `SERV_PRICES_JSON`). In fallback the trace shows a projected cost "if live", from payload size.
+- **Grounding**: every SERV step gets a strict JSON schema (`response_format: json_schema`, `strict: true`), is sanitized (truncate bounded strings such as `ranking[].why`), validated with zod, and passes semantic checks (every vault id exists, the selection is eligible, and every number in a risk note must appear in the payload). Numbers the model needs (for example the share of the vault your deposit would represent) are computed by code and passed as `derived` facts.
+- **Model routing**: `SERV_MODEL_FAST` / `SERV_MODEL_SMALL` / `SERV_MODEL_LARGE` (defaults mini / mini / gpt-5.4), optional `OPENJEV_API_KEY` for intent, per-step `SERV_TIER_*` overrides; see `.env.example` and `src/shared/serv/model-policy.ts`.
+- **Trace**: per step the source (code / SERV / OpenJEV / fallback), tier, model, latency, prompt / completion tokens and an **estimated cost** (OpenAI list prices checked 2026-09-23, labeled as an estimate; SERV billing may differ; override with `SERV_PRICES_JSON`). In fallback the trace shows a projected cost "if live", from payload size.
 - **Fallback**: without `SERV_API_KEY`, or when a call fails or does not validate, each SERV step runs a deterministic fallback with the same output shape and the reason is recorded. The app stays fully usable in fallback.
 
 ## Key features

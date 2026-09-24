@@ -7,6 +7,7 @@ import {
   tierForStep,
   type ServStepId,
 } from "./config";
+import { extractJsonObject, sanitizeServPayload } from "./sanitize";
 import { NO_KEY_REASON, type ReasoningStepTrace } from "./trace-types";
 
 export function hasServApiKey(): boolean {
@@ -79,10 +80,12 @@ export async function runServJson<T>(
 
   let raw: unknown;
   try {
-    raw = JSON.parse(content);
+    raw = extractJsonObject(content);
   } catch {
     throw new ServValidationError("SERV output is not valid JSON");
   }
+
+  raw = sanitizeServPayload(request.schemaName, raw);
 
   const parsed = request.validator.safeParse(raw);
   if (!parsed.success) {
