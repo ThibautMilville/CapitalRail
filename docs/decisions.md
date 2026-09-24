@@ -143,3 +143,8 @@ Append-only journal of decisions and user feedback. Format: `YYYY-MM-DD - decisi
 - **Jury traces**: compact `JuryTraceSummary` on result (rules / SERV / verifier / final) - not raw JSON; full JSON stays under Details.
 - **Demo**: `docs/demo-scenarios.md` with exact GO / WAIT / NO-GO prompts; README expanded (architecture, IXS sources, SERV place, guardrails, screenshots).
 - **Vaults**: skeleton cards instead of lone Loading text on first paint.
+
+## 2026-09-24 (screenshots + prod veto consistency)
+
+- Screenshots under `docs/screenshots/` embedded in README; X map in `docs/x-thread-hackathon.md`.
+- Prod verify after deploy `bcb5420`: BSC 500 USDC delayed/no KYC can be verifier **NO-GO** with aligned memo (`Final decision: NO-GO`, no proceed/sign); Avalanche WAIT and hard NO-GO also aligned; `txPack` absent when not GO. Local fallback still shows GO for the same prefs (screenshot `go-result.png`).
