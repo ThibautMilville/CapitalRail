@@ -43,6 +43,7 @@ import { HowItWorksSection } from "@/features/preflight/ui/HowItWorksSection";
 import { IntentComposer } from "@/features/preflight/ui/IntentComposer";
 import { JudgeDemoBar } from "@/features/preflight/ui/JudgeDemoBar";
 import { PipelineDiagram } from "@/features/preflight/ui/PipelineDiagram";
+import { JuryTraceSummary } from "@/features/preflight/ui/JuryTraceSummary";
 import { RoadmapRails } from "@/features/preflight/ui/RoadmapRails";
 import { SignPanel } from "@/features/preflight/ui/SignPanel";
 import { VerdictCard } from "@/features/preflight/ui/VerdictCard";
@@ -582,6 +583,7 @@ export function PreflightPage() {
               onShowReasoning={showReasoning}
               spotlightActionId={judge && demoStage === 1 ? "try-other-chain" : null}
             />
+            <JuryTraceSummary result={result} />
             {result.decision === "GO" ? (
               <SignPanel
                 key={`${result.snapshotHash}-${address ?? "none"}`}

@@ -278,10 +278,26 @@ export function VaultsPage() {
             Catalogue
           </h2>
           {loading && !data ? (
-            <p className="m-0 flex items-center gap-2 text-slate-300" role="status">
-              <span className="cr-check-spinner" aria-hidden />
-              Loading live IXS vaults...
-            </p>
+            <ul
+              className="m-0 grid list-none gap-3 p-0 sm:grid-cols-2"
+              aria-busy="true"
+              aria-label="Loading vault catalogue"
+            >
+              {[0, 1, 2, 3].map((i) => (
+                <li
+                  key={i}
+                  className="animate-pulse rounded-2xl border border-emerald-200/10 bg-[#06171e]/60 p-4"
+                >
+                  <div className="h-4 w-16 rounded bg-white/10" />
+                  <div className="mt-3 h-5 w-40 rounded bg-white/10" />
+                  <div className="mt-2 h-3 w-28 rounded bg-white/5" />
+                  <div className="mt-4 space-y-2">
+                    <div className="h-3 w-full rounded bg-white/5" />
+                    <div className="h-3 w-3/4 rounded bg-white/5" />
+                  </div>
+                </li>
+              ))}
+            </ul>
           ) : null}
           <ul className="m-0 grid list-none gap-3 p-0 sm:grid-cols-2">
             {(data?.vaults ?? []).map((vault) => {

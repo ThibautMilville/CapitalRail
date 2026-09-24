@@ -153,3 +153,10 @@ Done: multi-step pipeline (code rules -> SERV risk notes + cross-check -> rankin
 - Source of truth: `src/shared/serv/model-policy.ts` (re-exported from `config.ts`).
 - Tiers: `fast` (intent, verification), `small` (risk, ranking+memo, agent), `large` (available; ranking uses it only if `SERV_TIER_RANKING=large`).
 - OpenJEV: optional fast intent only (`src/shared/openjev/`). SERV JSON path sanitizes/truncates bounded fields before zod (`src/shared/serv/sanitize.ts`).
+
+## 2026-09-24 (decision copy + jury surfaces)
+
+- After SERV ranking, if verification hard-fails a GO or code outcome is WAIT/NO-GO, `alignDecisionCopy` rewrites `memoMarkdown` / `userNextSteps` before response.
+- `applySafetyGuard` also aligns copy when forcing NO-GO.
+- UI: `CheckingPanel` pipeline progress; `JuryTraceSummary` after `VerdictCard`; SignPanel only when `decision === "GO"`.
+- Screenshots for README/X: `docs/screenshots/`.

@@ -26,6 +26,7 @@ import {
   type ReasoningStepTrace,
 } from "@/shared/serv/trace-types";
 import { chainLabel } from "@/shared/wallet/chains";
+import { alignDecisionCopy } from "./align-decision-copy";
 import type {
   Disagreement,
   MandatePreferences,
@@ -510,12 +511,19 @@ export function applySafetyGuard(
     return { decision, guard: { applied: false, reason: null } };
   }
 
+  const aligned = alignDecisionCopy({
+    decision: "NO-GO",
+    selectedVaultId: null,
+    memoMarkdown: decision.memoMarkdown,
+    userNextSteps: decision.userNextSteps,
+    safetyReason: reason,
+  });
+
   return {
     decision: {
       ...decision,
       decision: "NO-GO",
-      selectedVaultId: null,
-      memoMarkdown: `${decision.memoMarkdown}\n\n_CapitalRail safety override: ${reason}._`,
+      ...aligned,
     },
     guard: { applied: true, reason },
   };
@@ -567,6 +575,7 @@ export function computeDisagreements(
 function buildRejected(
   rules: RulesEntry[],
   selectedVaultId: string | null,
+  decision: Decision,
 ): ServDecision["rejected"] {
   return rules
     .filter((entry) => entry.vaultId !== selectedVaultId)
@@ -574,7 +583,11 @@ function buildRejected(
       vaultId: entry.vaultId,
       reasonCode: entry.reasonCode,
       explanation: entry.eligible
-        ? "Eligible but ranked below the selected rail."
+        ? decision === "GO"
+          ? "Eligible but ranked below the selected rail."
+          : decision === "NO-GO"
+            ? "Was eligible by rules, but the final decision is NO-GO (verifier veto or safety override)."
+            : "Eligible by rules, but the final decision is WAIT."
         : entry.explanation,
     }));
 }
@@ -754,25 +767,68 @@ export async function decidePreflight(
   };
 
   const vetoed = verification.verdict === "fail" && composed.decision === "GO";
-  if (verification.verdict !== "pass") {
+  if (vetoed) {
+    composed = {
+      ...composed,
+      decision: "NO-GO",
+      ...alignDecisionCopy({
+        decision: "NO-GO",
+        selectedVaultId: null,
+        memoMarkdown: proposal.memoMarkdown,
+        userNextSteps: proposal.userNextSteps,
+        rationale: proposal.rationale,
+        verification,
+        vetoed: true,
+      }),
+    };
+  } else if (verification.verdict === "warn") {
     const issueLines = verification.issues.map((item) => `- ${item.issue}`);
     composed = {
       ...composed,
-      ...(vetoed ? { decision: "NO-GO" as const, selectedVaultId: null } : {}),
       memoMarkdown: [
         composed.memoMarkdown,
         "",
-        verification.verdict === "fail"
-          ? "_Verifier objection (blocking):_"
-          : "_Verifier warnings:_",
+        "_Verifier warnings:_",
         ...issueLines,
       ].join("\n"),
     };
   }
 
+  // Non-GO from code (WAIT / NO-GO) must not keep a ranking memo that says proceed.
+  if (composed.decision !== "GO") {
+    composed = {
+      ...composed,
+      ...alignDecisionCopy({
+        decision: composed.decision,
+        selectedVaultId: composed.selectedVaultId,
+        memoMarkdown: composed.memoMarkdown,
+        userNextSteps: composed.userNextSteps,
+        rationale: proposal.rationale,
+        verification,
+        vetoed,
+      }),
+    };
+  }
+
   const guarded = applySafetyGuard(input, composed);
   const final = guarded.decision;
-  final.rejected = buildRejected(rules, final.selectedVaultId);
+  // Final pass: whatever veto / safety did, memo and steps must match the decision.
+  if (final.decision !== "GO") {
+    Object.assign(
+      final,
+      alignDecisionCopy({
+        decision: final.decision,
+        selectedVaultId: final.selectedVaultId,
+        memoMarkdown: final.memoMarkdown,
+        userNextSteps: final.userNextSteps,
+        rationale: proposal.rationale,
+        verification,
+        vetoed,
+        safetyReason: guarded.guard.applied ? guarded.guard.reason : null,
+      }),
+    );
+  }
+  final.rejected = buildRejected(rules, final.selectedVaultId, final.decision);
   const disagreements = computeDisagreements(rules, risk, verification, vetoed);
 
   return {

@@ -19,3 +19,12 @@
 ## Journal
 
 - 2026-09-24: X (Twitter) contest thread drafted in English and saved at `docs/x-thread-hackathon.md` (SERV Hackathon Edition 01, live + GitHub links, no OpenJEV live claim).
+
+## 2026-09-24 (jury submission bar)
+
+- [x] Decision / memo / next steps / UI always agree after veto or non-GO.
+- [x] Three reproducible public scenarios documented (`docs/demo-scenarios.md`).
+- [x] Progress UI during preflight (~15-35 s).
+- [x] Compact SERV traces on result page.
+- [x] README: architecture, IXS, SERV, guardrails, GO/WAIT/NO-GO, screenshots.
+- [ ] User: video 60-90s, X post @openservai, OpenServ data collection toggle, official form.

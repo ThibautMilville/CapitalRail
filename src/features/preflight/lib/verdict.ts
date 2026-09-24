@@ -198,12 +198,24 @@ export function buildVerdict(
     };
   }
 
+  const vetoed =
+    result.verification?.verdict === "fail" &&
+    (result.disagreements ?? []).some(
+      (item) => item.step === "verification" && /veto/i.test(item.resolution),
+    );
+
   return {
     tone: "nogo",
-    headline: balanceAmount ? "Not enough USDC." : "No vault fits your rules.",
+    headline: balanceAmount
+      ? "Not enough USDC."
+      : vetoed
+        ? "Verifier blocked this entry."
+        : "No vault fits your rules.",
     summary: balanceAmount
       ? "The vault is open, but your wallet holds less than the amount you asked for."
-      : "Nothing was prepared. Loosen one rule below and we re-check instantly.",
+      : vetoed
+        ? "Rules found a candidate, but the independent verifier vetoed GO. Nothing was prepared for signing."
+        : "Nothing was prepared. Loosen one rule below and we re-check instantly.",
     reasons: reasons.slice(0, 3),
     actions,
   };

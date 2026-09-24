@@ -162,12 +162,30 @@ export function ExpertDetails({
               <div className="space-y-3 rounded-2xl border border-emerald-200/15 bg-[#06171e]/85 p-4 sm:p-5">
                 <div>
                   <p className="m-0 font-mono text-[0.66rem] uppercase tracking-[0.16em] text-cyan-200/70">
-                    Decision memo ({result.reasoning === "serv" ? "SERV" : "fallback"})
+                    Decision memo ({result.reasoning === "serv" ? "SERV" : "fallback"}) · {result.decision}
                   </p>
                   <div className="mt-2">
                     <MemoText markdown={result.memoMarkdown} />
                   </div>
                 </div>
+                {result.userNextSteps.length > 0 ? (
+                  <div>
+                    <p className="m-0 font-mono text-[0.66rem] uppercase tracking-[0.16em] text-cyan-200/70">
+                      Next steps
+                    </p>
+                    <ul className="m-0 mt-2 list-none space-y-1.5 p-0">
+                      {result.userNextSteps.map((step) => (
+                        <li
+                          key={step}
+                          className="flex gap-2 text-[0.86rem] leading-snug text-slate-300"
+                        >
+                          <span className="mt-[0.45rem] h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-200/50" aria-hidden />
+                          {step}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
                 <div>
                   <p className="m-0 font-mono text-[0.66rem] uppercase tracking-[0.16em] text-cyan-200/70">
                     Snapshot proof

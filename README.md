@@ -1,6 +1,6 @@
 # CapitalRail
 
-IXS entry preflight for the SERV Hackathon Edition 01 (RWA Vaults track, partner IXS).
+IXS entry preflight for the **SERV Hackathon Edition 01** (RWA Vaults track, partner IXS).
 
 Before any capital moves, CapitalRail checks the live IXS vaults (capacity, whitelist / KYC, withdrawal mode, balance) and answers **GO / WAIT / NO-GO** with reasons and fact-grounded risk notes. Only on GO, and only for your connected wallet, it prepares **unsigned** approve + deposit transactions that you sign yourself.
 
@@ -9,140 +9,175 @@ Before any capital moves, CapitalRail checks the live IXS vaults (capacity, whit
 | Live | https://capitalrail.ozc.fr |
 | Repo | https://github.com/ThibautMilville/CapitalRail |
 | License | MIT |
+| Demo scenarios | [docs/demo-scenarios.md](./docs/demo-scenarios.md) |
 
-## Why this product
+## Pitch
 
-IXS exposes one High Yield Bond product across four vaults (BSC / Avalanche, KYC vs open). The open Avalanche vault is listed as open but MCP can report a deposit limit of `0` (often NAV staleness/drift, not permanently closed). A naive agent that reads "open" and deposits - or that forces a deposit past limit 0 - gets a failed or stuck transaction. CapitalRail treats that as the product: **preflight before deposit**, KEEP WAIT until MCP build succeeds.
+An agent sees an open vault and tries to deposit. CapitalRail checks **actual** capacity, access, and settlement on live IXS rails. When MCP deposit limit is `0` (often NAV staleness on Avalanche HYB - not permanently closed), it returns **WAIT** and refuses unsafe entry. Rules are code; judgment is SERV; the verifier may veto a GO, never unlock one.
 
-Settlement for async HYB rails: daily cutoff **5:00 PM SGT (UTC+8)** on Singapore business days (Mon-Fri), for deposits and redemptions. Min deposit on Avalanche HYB: **100 USDC**. Redemptions: no separate claim step (operator finalizes).
+## Jury demo path (~2 min)
 
-## How it works
+1. Free text intent on the home page (examples below).
+2. Confirm or edit rules (amount, chain, KYC, withdrawals).
+3. Watch progress: scan rails → rules → SERV risk → ranking → verification → decision.
+4. Read the decision + compact "For the jury" SERV summary.
+5. Open Details for evidence / full trace / memo. **Unsigned txs only if GO.**
 
-A four-step guided flow:
+![Landing / preflight start](./docs/screenshots/landing-hero.png)
 
-1. **Tell us** - amount, chain, KYC preference, and withdrawal mode (or free-text intent).
-2. **We check** - live scan of IXS rails (REST + MCP), then rules and SERV judgment.
-3. **Decision** - GO / WAIT / NO-GO with rejected vaults, risk notes, ranking, and an investment memo.
-4. **Review & sign** - on GO only: unsigned approve + deposit calldata for the connected wallet.
+![Progress while analyzing](./docs/screenshots/progress-analyzing.png)
 
-## SERV usage: rules = code, judgment = SERV
+## Architecture
 
-CapitalRail does not ask a model to re-apply rules that code can check exactly. The split is explicit and visible in the trace:
+```
+Browser (guided UI) ──► POST /api/intent (optional free text → mandate)
+                    ──► POST /api/preflight
+                              │
+                              ├─ scanRails: IXS REST GET /vaults + MCP vault_get / whitelist / build deposit
+                              ├─ rulesFilter (code): eligible + most blocking reason → GO / WAIT / NO-GO class
+                              ├─ SERV risk (small): fact-grounded notes + rules cross-check
+                              ├─ SERV ranking (small): best eligible vault, memo, next steps
+                              ├─ SERV verification (fast): pass / warn / fail (hard fail vetoes GO)
+                              └─ safety override (code): re-check final GO; align memo/steps with decision
+```
 
-| Step | Who | Tier (default model) | Output |
-| --- | --- | --- | --- |
-| Intent (`POST /api/intent`) | OpenJEV when keyed, else SERV | fast (`openjev` / `gpt-5.4-mini`) | mandate from fuzzy free text |
-| 1. Rules filter | **code** (authoritative) | - | per vault: eligible + most blocking reason; outcome GO / WAIT / NO-GO |
-| 2. Risk notes + rules cross-check | SERV | small (`gpt-5.4-mini`) | fact-grounded risk notes (delayed ERC-7540 exit, time to maturity, small vault / concentration, KYC onboarding, capacity) + SERV's own eligibility view per vault |
-| 3. Ranking + memo | SERV | small (`gpt-5.4-mini`) | best eligible vault with a rationale, full ranking, investment memo, next steps |
-| 4. Independent verifier | SERV | fast (`gpt-5.4-mini`) | pass / warn / fail with typed issues; a hard `fail` vetoes a GO |
-| Safety override | **code** | - | re-checks the final GO (open, buildable, inside the mandate) |
-| Decision agent (`POST /api/agent`) | SERV | small (`gpt-5.4-mini`) | answers, cited facts, optional rule change to re-check |
+Stack: Next.js App Router, React, TypeScript, Tailwind, wagmi/viem, zod, OpenAI-compatible SERV client, IXS REST + MCP.
 
-- **SERV can veto an entry, never unlock one.** Where SERV's cross-check disagrees with the code rules, or the verifier contradicts the proposal, the disagreement is listed in the trace (`disagreements`) with how it was resolved.
-- **Grounding**: every SERV step gets a strict JSON schema (`response_format: json_schema`, `strict: true`), is sanitized (truncate bounded strings such as `ranking[].why`), validated with zod, and passes semantic checks (every vault id exists, the selection is eligible, and every number in a risk note must appear in the payload). Numbers the model needs (for example the share of the vault your deposit would represent) are computed by code and passed as `derived` facts.
-- **Model routing**: `SERV_MODEL_FAST` / `SERV_MODEL_SMALL` / `SERV_MODEL_LARGE` (defaults mini / mini / gpt-5.4), optional `OPENJEV_API_KEY` for intent, per-step `SERV_TIER_*` overrides; see `.env.example` and `src/shared/serv/model-policy.ts`.
-- **Trace**: per step the source (code / SERV / OpenJEV / fallback), tier, model, latency, prompt / completion tokens and an **estimated cost** (OpenAI list prices checked 2026-09-23, labeled as an estimate; SERV billing may differ; override with `SERV_PRICES_JSON`). In fallback the trace shows a projected cost "if live", from payload size.
-- **Fallback**: without `SERV_API_KEY`, or when a call fails or does not validate, each SERV step runs a deterministic fallback with the same output shape and the reason is recorded. The app stays fully usable in fallback.
+Folder map: `src/features/preflight` (scan, decide, UI), `src/shared/ixs` (REST/MCP), `src/shared/serv` (client, schemas, prompts), `src/app/api/*`.
+
+## IXS data sources
+
+| Source | What CapitalRail uses |
+| --- | --- |
+| REST `GET https://api-v2.ixs.finance/vaults` | Vault list (4 HYB USDC vaults: BSC/Avalanche × open/KYC) |
+| MCP `https://api-v2.ixs.finance/mcp` | `vault_get`, `vault_check_whitelist`, `vault_build_request_deposit` (capacity / limit 0), exit tools for redeem |
+| Ops facts (`src/shared/ixs/ops-facts.ts`) | Cutoff 5:00 PM SGT, limit-0 = NAV stale meaning, Avalanche min 100 USDC - injected into SERV payloads |
+
+A `User-Agent` header is required on IXS calls. Settlement for async HYB: daily cutoff Singapore business days; redemptions have no separate claim step (operator finalizes).
+
+## Where SERV sits (rules = code, judgment = SERV)
+
+| Step | Who | Role |
+| --- | --- | --- |
+| Rules filter | **Code** (authoritative) | Chain, KYC, settlement, capacity → outcome class GO / WAIT / NO-GO |
+| Risk notes | **SERV** | Fact-grounded risks + independent eligibility cross-check |
+| Ranking + memo | **SERV** | Rank eligible rails, write memo and next steps |
+| Verifier | **SERV** | Pass / warn / fail; **hard fail vetoes a GO, never unlocks one** |
+| Safety override | **Code** | Last word on GO; rewrite memo/steps if decision is not GO |
+
+Without `SERV_API_KEY`, each SERV step uses a deterministic fallback with the same shape (app stays usable). Trace shows source per step (code / SERV / fallback).
+
+## Guardrails
+
+- **No unsigned txs unless GO** - and only for the checked connected wallet (demo `0x...0001` = preview, never a tx pack).
+- **Memo and next steps always match the final decision** - after verifier veto or safety override, CapitalRail regenerates copy so it never says "proceed" / "sign" on WAIT or NO-GO.
+- **Sign UI is hidden** when decision is not GO.
+- SERV cannot invent vault ids or numbers absent from the payload; every GO is re-checked by code.
+- Rate-limited API; no custody; nothing signed server-side.
+
+## Reproduce GO / WAIT / NO-GO
+
+Full prefs and curls: [docs/demo-scenarios.md](./docs/demo-scenarios.md).
+
+### GO (BSC, delayed ok)
+
+Free text: `500 USDC on BSC, no KYC, delayed withdrawals ok`  
+Prefs: amount `500`, chain BSC (`56`), KYC off, sync off.
+
+![GO result](./docs/screenshots/go-result.png)
+
+Expect: `decision=GO` when the open BSC rail builds. Memo may recommend BSC. Tx pack only with a real wallet.
+
+### WAIT (Avalanche, deposit limit 0)
+
+Free text: `100 USDC on Avalanche, no KYC, delayed ok`  
+Prefs: amount `100`, chain Avalanche (`43114`), KYC off, sync off.
+
+![WAIT Avalanche limit 0](./docs/screenshots/wait-avalanche.png)
+
+Expect: `WAIT` while MCP limit is 0. Memo: `Final decision: WAIT`. No sign CTA, no tx pack.
+
+### NO-GO (hard block or verifier veto)
+
+Hard block: Avalanche + **instant withdrawals required** (`requireSyncSettlement: true`) → settlement conflict → `NO-GO`.  
+Or: GO path + live verifier hard fail → veto → memo rewritten to `Final decision: NO-GO`.
+
+![NO-GO / veto](./docs/screenshots/nogo-veto.png)
+
+### Vaults catalogue
+
+![Vaults loaded](./docs/screenshots/vaults-loaded.png)
+
+## Screenshots (X / jury)
+
+All files under [`docs/screenshots/`](./docs/screenshots/) (ASCII names). Tweet mapping: [docs/x-thread-hackathon.md](./docs/x-thread-hackathon.md).
+
+| File | Use |
+| --- | --- |
+| `landing-hero.png` | Tweet 1/7 - product hero / start of flow |
+| `progress-analyzing.png` | Tweet 2/7 - not frozen, pipeline progress |
+| `wait-avalanche.png` | Tweet 3/7 - limit 0 → WAIT |
+| `go-result.png` | Tweet 4/7 or 6/7 - GO + jury SERV summary |
+| `nogo-veto.png` | Tweet 4/7 - verifier / hard NO-GO consistency |
+| `vaults-loaded.png` | Tweet 5/7 - live IXS catalogue |
 
 ## Key features
 
-- Live IXS vault scan (capacity, KYC / whitelist, settlement mode, balance)
-- Authoritative code rules + SERV risk notes, ranking, memo, and verifier
-- Unsigned tx pack only on GO for the checked connected wallet
-- Decision agent for general questions or follow-ups on the last preflight
-- Rate-limited API for agents and wallets
-- Honest instance counter of avoided failed deposits (WAIT + NO-GO)
-
-## Tech stack
-
-Next.js (App Router), React, TypeScript, Tailwind CSS, wagmi / viem, zod, Three.js (intro), OpenAI-compatible SERV client, IXS REST + MCP.
-
-## Business model
-
-1. **Preflight API for agents and wallets**: one call before any deposit (free tier, then pay-per-check).
-2. **White-label "Can I enter?" widget + blocked-demand dashboard** for RWA issuers such as IXS: see how much demand is blocked by capacity, KYC or withdrawal rules.
-3. **Capacity alerts**: get notified when a vault on WAIT reopens.
-4. **Referral on validated deposits**, subject to an agreement with IXS.
-
-No invented metrics: the page shows a real counter "Failed deposits avoided on this instance" (WAIT + NO-GO served by this server since start, in-memory), exposed on `GET /api/stats` and `GET /api/health`.
+- Live IXS vault scan (capacity, KYC / whitelist, settlement, balance)
+- Authoritative code rules + SERV risk, ranking, memo, verifier
+- Progress UI during the ~15-35 s preflight
+- Compact jury SERV summary on the result (not raw 17KB JSON)
+- Unsigned tx pack only on GO for the connected wallet
+- Decision agent + OpenAPI + thin MCP for other agents
 
 ## For agents
-
-CapitalRail is a **preflight gatekeeper** other agents call before allocating to IXS vaults - not a trading desk.
 
 | | |
 | --- | --- |
 | OpenAPI 3 | [`/openapi.yaml`](./public/openapi.yaml) (live: https://capitalrail.ozc.fr/openapi.yaml) |
-| UI | Section `#agents` on the home page (nav: Agents) |
-| Tools | `POST /api/preflight` (GO / WAIT / NO-GO) and `POST /api/intent` (message → mandate) |
+| UI | Section `#agents` |
+| Tools | `POST /api/preflight`, `POST /api/intent` |
 
-Copy-paste curls, OpenAI/Anthropic tool JSON, and Cursor MCP config live in the For agents section. No API auth today; rate limited per IP; browser cross-site Origin blocked.
-
-**Agent rule**: when `decision` is WAIT / reason `DEPOSIT_LIMIT_ZERO`, do not force a deposit (limit 0 may mean NAV stale). Wait for a successful MCP build. Async rails settle against the daily SGT cutoff.
-
-### MCP (optional)
-
-Thin stdio MCP that HTTP-calls the same REST API:
+**Agent rule:** when `decision` is WAIT / reason `DEPOSIT_LIMIT_ZERO`, do not force a deposit. Wait for a successful MCP build.
 
 ```bash
-# default CAPITALRAIL_BASE_URL=https://capitalrail.ozc.fr
-npm run mcp
+npm run mcp   # CAPITALRAIL_BASE_URL defaults to https://capitalrail.ozc.fr
 ```
 
-Cursor example (`mcp.json`):
-
-```json
-{
-  "mcpServers": {
-    "capitalrail": {
-      "command": "npx",
-      "args": ["tsx", "mcp/server.ts"],
-      "cwd": "/absolute/path/to/CapitalRail",
-      "env": {
-        "CAPITALRAIL_BASE_URL": "https://capitalrail.ozc.fr"
-      }
-    }
-  }
-}
-```
-
-Tools: `capitalrail_preflight`, `capitalrail_intent`.
-
-## API
-
-All endpoints are rate limited per IP (in-memory): 429 with `{ "error", "code": "RATE_LIMITED", "retryAfterSec" }` and a `Retry-After` header.
-
-Replace `$BASE_URL` with your deployed host (for example `https://your-host.example`).
+## API (quick)
 
 ```bash
-# Health: IXS reachability, SERV key presence, routed models, instance stats
+BASE_URL=https://capitalrail.ozc.fr
+
 curl -s "$BASE_URL/api/health"
 
-# Preflight: GO / WAIT / NO-GO, rejected vaults, risk notes, disagreements, trace
 curl -s -X POST "$BASE_URL/api/preflight" \
   -H 'Content-Type: application/json' \
   -d '{
     "walletAddress": "0x0000000000000000000000000000000000000001",
-    "amount": "1",
-    "preferences": { "allowKyc": false, "requireSyncSettlement": false, "preferredChainId": 56 }
+    "amount": "500",
+    "preferences": {
+      "allowKyc": false,
+      "requireSyncSettlement": false,
+      "preferredChainId": 56
+    }
   }'
 
-# Intent: free text (max 500 chars) to a mandate
 curl -s -X POST "$BASE_URL/api/intent" \
   -H 'Content-Type: application/json' \
   -d '{ "message": "500 USDC on BSC, no KYC, delayed withdrawals ok" }'
-
-# Agent: general question (context null) or follow-up on the last preflight
-curl -s -X POST "$BASE_URL/api/agent" \
-  -H 'Content-Type: application/json' \
-  -d '{ "question": "How does KYC work?", "context": null }'
-
-# Instance stats
-curl -s "$BASE_URL/api/stats"
 ```
 
-The placeholder wallet `0x...0001` gets a public-data preview (`preview: true`, no tx pack, no balance read). The UI has a **Copy as API call** button under each verdict that copies the matching curl.
+Placeholder wallet `0x...0001` → `preview: true`, no tx pack.
+
+## Business model
+
+1. Preflight API for agents and wallets (free tier, then pay-per-check).
+2. White-label "Can I enter?" widget + blocked-demand dashboard for RWA issuers.
+3. Capacity alerts when a WAIT vault reopens.
+4. Referral on validated deposits (subject to IXS agreement).
+
+Honest instance counter: failed deposits avoided (WAIT + NO-GO) on `GET /api/stats` / health.
 
 ## Getting started
 
@@ -150,33 +185,11 @@ The placeholder wallet `0x...0001` gets a public-data preview (`preview: true`, 
 git clone https://github.com/ThibautMilville/CapitalRail.git
 cd CapitalRail
 cp .env.example .env.local
-# optional: set SERV_API_KEY from https://console.openserv.ai
-npm install
-npm run build
-npm run start
+# optional: SERV_API_KEY from https://console.openserv.ai
+npm install && npm run build && npm run start
 ```
 
-Checks: `npx tsc --noEmit`, `npm run lint`, `npm test` (node:test via tsx).
-
-## Project structure
-
-```
-src/
-  app/api/          agent, health, intent, position, preflight, stats, exit/*, vaults
-  features/agent/   decision agent (lib + widget)
-  features/preflight/
-    lib/            scan-rails, decide-preflight (+ tests), run-preflight, verdict, api-snippet, agent-api-docs
-    ui/             guided flow, verdict card, ForAgentsSection, business model section
-  shared/
-    http/           rate-limit, instance-stats, origin
-    ixs/            REST + MCP clients
-    serv/           SERV client, routing + price table, schemas, prompts, trace types
-    wallet/         wagmi providers, chains, demo wallet
-mcp/
-  server.ts         thin MCP (capitalrail_preflight, capitalrail_intent) → HTTP API
-public/
-  openapi.yaml      OpenAPI 3 for the two agent tools
-```
+Checks: `npx tsc --noEmit`, `npm run lint`, `npm test`.
 
 ## Safety
 

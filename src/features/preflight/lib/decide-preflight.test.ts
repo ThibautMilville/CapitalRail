@@ -114,6 +114,13 @@ describe("decidePreflight (fallback, no SERV key)", () => {
     const result = await decidePreflight(input({ preferredChainId: 43114 }));
     assert.equal(result.decision, "WAIT");
     assert.equal(result.selectedVaultId, null);
+    assert.match(result.memoMarkdown, /Final decision: WAIT/);
+    assert.doesNotMatch(result.memoMarkdown, /Recommendation:\s*deposit/i);
+    assert.ok(
+      result.userNextSteps.every(
+        (step) => !/proceed|unsigned|approve first/i.test(step),
+      ),
+    );
   });
 
   it("says NO-GO (not WAIT) when the limit-0 rail also breaks a mandate rule", async () => {
@@ -176,12 +183,19 @@ describe("safety override and verifier", () => {
       decision: "GO",
       selectedVaultId: "avax-open",
       rejected: [],
-      memoMarkdown: "memo",
-      userNextSteps: [],
+      memoMarkdown: "**Recommendation:** deposit on Avalanche. Unsigned steps ready.",
+      userNextSteps: ["Review the deposit steps: approve first, then deposit."],
     });
     assert.equal(decision.decision, "NO-GO");
     assert.equal(decision.selectedVaultId, null);
     assert.equal(guard.applied, true);
+    assert.match(decision.memoMarkdown, /Final decision: NO-GO/);
+    assert.doesNotMatch(decision.memoMarkdown, /Recommendation:\s*deposit/i);
+    assert.ok(
+      decision.userNextSteps.every(
+        (step) => !/approve first|unsigned/i.test(step),
+      ),
+    );
   });
 
   it("leaves a valid GO untouched", () => {

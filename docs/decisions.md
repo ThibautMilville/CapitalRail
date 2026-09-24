@@ -134,3 +134,12 @@ Append-only journal of decisions and user feedback. Format: `YYYY-MM-DD - decisi
 - **Model policy** (`src/shared/serv/model-policy.ts`): tiers `fast` / `small` / `large`. Defaults: intent+verification=`fast`, risk+ranking+agent=`small`. Ranking moved off `gpt-5.4` onto mini by default (restore with `SERV_TIER_RANKING=large`). Env: `SERV_MODEL_FAST|SMALL|LARGE`, optional `SERV_TIER_*`.
 - **Ranking fallback fix**: live prod saw intermittent `ranking.0.why` > 300 chars -> schema fail -> fallback. Server-side truncate of bounded strings before zod (`sanitizeServPayload`); ranking prompt now requires `why` <= 280 chars. Keep zod max at 300.
 - **Health**: `/api/health` reports `models`, `tiers`, and `openjev` (configured flag + steps) with no secrets.
+
+## 2026-09-24 (jury fix - decision copy alignment + demo UX)
+
+- **Bug**: after verifier veto (or NO-GO/WAIT), ranking memo/nextSteps could still say proceed / prepare deposit while decision was NO-GO.
+- **Fix**: `alignDecisionCopy` (`src/features/preflight/lib/align-decision-copy.ts`) regenerates memo + next steps whenever final decision is not GO (veto, safety override, or code WAIT/NO-GO). Unsigned tx pack only on GO (`run-preflight`); SignPanel only mounts on GO.
+- **Progress UI**: `CheckingPanel` shows explicit pipeline steps (scan → rules → SERV risk → ranking → verification → decision) with timed active state.
+- **Jury traces**: compact `JuryTraceSummary` on result (rules / SERV / verifier / final) - not raw JSON; full JSON stays under Details.
+- **Demo**: `docs/demo-scenarios.md` with exact GO / WAIT / NO-GO prompts; README expanded (architecture, IXS sources, SERV place, guardrails, screenshots).
+- **Vaults**: skeleton cards instead of lone Loading text on first paint.

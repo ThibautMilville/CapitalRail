@@ -23,3 +23,10 @@ Living documentation for the CapitalRail hackathon entry (SERV Hackathon Edition
 - Mark unconfirmed work as "in progress" and update it once confirmed.
 - Everything is written in English. Only ASCII hyphens `-` (never U+2014 or U+2013).
 - Check before finishing: `rg "[\x{2013}\x{2014}]" docs/` must return nothing.
+
+## Demo scenarios
+
+| File | Content |
+|---|---|
+| [demo-scenarios.md](./demo-scenarios.md) | Exact prompts/prefs to reproduce GO / WAIT / NO-GO on prod |
+| [screenshots/](./screenshots/) | Jury/X images referenced from README |
